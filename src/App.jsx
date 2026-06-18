@@ -1,19 +1,26 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import StoriesPage from './pages/StoriesPage';
 import StoryDetailPage from './pages/StoryDetailPage';
 import AboutPage from './pages/AboutPage';
+import AuthPage from './pages/AuthPage';
+import AdminStoriesPage from './pages/AdminStoriesPage';
+import AdminCategoriesPage from './pages/AdminCategoriesPage';
 import { useEffect } from 'react';
 
 function ScrollToTop() {
+
   const { pathname } = useLocation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+  
   return null;
 }
 
@@ -34,6 +41,10 @@ function AnimatedRoutes() {
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/story/:slug" element={<StoryDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/login" element={<AuthPage mode="login" />} />
+          <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/admin/stories" element={<AdminStoriesPage />} />
+          <Route path="/admin/categories" element={<AdminCategoriesPage />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -43,16 +54,18 @@ function AnimatedRoutes() {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1">
-            <AnimatedRoutes />
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">
+              <AnimatedRoutes />
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

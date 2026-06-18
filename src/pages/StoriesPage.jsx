@@ -5,7 +5,7 @@ import { FiFilter, FiGrid, FiList, FiChevronDown } from 'react-icons/fi';
 import { GiScrollUnfurled } from 'react-icons/gi';
 import StoryCard from '../components/StoryCard';
 import ScrollReveal from '../components/ScrollReveal';
-import { stories, categories } from '../data/stories';
+import { useStoriesData } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
 
 const sortOptions = [
@@ -20,6 +20,10 @@ export default function StoriesPage() {
     const [sortBy, setSortBy] = useState('popular');
     const [viewMode, setViewMode] = useState('grid');
     const { isBookmarked, toggleBookmark } = useBookmarks();
+    const { stories, categories, loading, error } = useStoriesData({
+        category: activeCategory,
+        sort: sortBy,
+    });
 
     const setCategory = (cat) => {
         if (cat === 'all') {
@@ -31,25 +35,8 @@ export default function StoriesPage() {
     };
 
     const filteredStories = useMemo(() => {
-        let result =
-            activeCategory === 'all'
-                ? [...stories]
-                : stories.filter((s) => s.category === activeCategory);
-
-        switch (sortBy) {
-            case 'popular':
-                result.sort((a, b) => b.popularity - a.popularity);
-                break;
-            case 'newest':
-                result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                break;
-            case 'az':
-                result.sort((a, b) => a.title.localeCompare(b.title));
-                break;
-        }
-
-        return result;
-    }, [activeCategory, sortBy]);
+        return stories;
+    }, [stories]);
 
     return (
         <div className="min-h-screen pt-24 sm:pt-28">
@@ -90,7 +77,7 @@ export default function StoriesPage() {
                                         onChange={(e) => setCategory(e.target.value)}
                                         className="bg-[var(--bg-card)] text-[var(--text-primary)] text-sm border border-[var(--border-color)] rounded-xl pl-9 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-saffron/20 focus:border-saffron transition-all cursor-pointer w-full sm:min-w-[240px] appearance-none"
                                     >
-                                        <option value="all">All Series (50 Stories)</option>
+                                        <option value="all">All Series ({stories.length} Stories)</option>
                                         {categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>
                                                 {cat.name}
@@ -150,7 +137,7 @@ export default function StoriesPage() {
 
                     {/* Results count */}
                     <p className="text-xs text-[var(--text-muted)] mt-6">
-                        Showing {filteredStories.length} {filteredStories.length === 1 ? 'story' : 'stories'}
+                        {loading ? 'Loading stories...' : `Showing ${filteredStories.length} ${filteredStories.length === 1 ? 'story' : 'stories'}`}
                         {activeCategory !== 'all' && (
                             <span> in <span className="text-saffron font-medium">{categories.find(c => c.id === activeCategory)?.name}</span></span>
                         )}
@@ -161,6 +148,11 @@ export default function StoriesPage() {
             {/* Stories Grid */}
             <section className="px-4 pb-20">
                 <div className="max-w-7xl mx-auto">
+                    {error && (
+                        <div className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
+                            {error}
+                        </div>
+                    )}
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeCategory + sortBy + viewMode}
@@ -227,7 +219,7 @@ export default function StoriesPage() {
                         </motion.div>
                     </AnimatePresence>
 
-                    {filteredStories.length === 0 && (
+                    {!loading && filteredStories.length === 0 && (
                         <div className="text-center py-20 flex flex-col items-center">
                             <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center mb-6 text-4xl">
                                 🪷

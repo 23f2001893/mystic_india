@@ -17,7 +17,7 @@ import {
 } from 'react-icons/gi';
 import ScrollReveal from '../components/ScrollReveal';
 import DecorativeBorder from '../components/DecorativeBorder';
-import { stories, categories } from '../data/stories';
+import { useStoriesData } from '../hooks/useStoriesData';
 
 const categoryIcons = {
     'cosmic-myths': GiGalaxy,
@@ -33,6 +33,7 @@ const categoryIcons = {
 };
 
 export default function HomePage() {
+    const { stories, categories, loading, error } = useStoriesData({ sort: 'popular' });
 
     return (
         <div className="min-h-screen">
@@ -141,8 +142,8 @@ export default function HomePage() {
                         className="mt-16 flex items-center justify-center gap-8 sm:gap-16"
                     >
                         {[
-                            { value: '50', label: 'Stories' },
-                            { value: '10', label: 'Categories' },
+                            { value: loading ? '...' : String(stories.length), label: 'Stories' },
+                            { value: loading ? '...' : String(categories.length), label: 'Categories' },
                             { value: '∞', label: 'Wisdom' },
                         ].map((stat) => (
                             <div key={stat.label} className="text-center">
@@ -188,9 +189,14 @@ export default function HomePage() {
                     </ScrollReveal>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                        {error && (
+                            <p className="md:col-span-3 text-center text-sm text-red-500">
+                                {error}
+                            </p>
+                        )}
                         {categories.map((cat, i) => {
-                            const Icon = categoryIcons[cat.id];
-                            const count = stories.filter((s) => s.category === cat.id).length;
+                            const Icon = categoryIcons[cat.id] || GiScrollUnfurled;
+                            const count = cat.storyCount ?? stories.filter((s) => s.category === cat.id).length;
                             return (
                                 <ScrollReveal key={cat.id} delay={i * 0.15}>
                                     <Link

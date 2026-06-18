@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
-import { searchStories } from '../data/stories';
+import { searchStoriesApi } from '../services/api';
 import { Link } from 'react-router-dom';
 
 export default function SearchBar({ onClose }) {
@@ -13,11 +13,23 @@ export default function SearchBar({ onClose }) {
     }, []);
 
     useEffect(() => {
+        let ignore = false;
+
         if (query.trim().length > 1) {
-            setResults(searchStories(query));
+            searchStoriesApi(query)
+                .then((stories) => {
+                    if (!ignore) setResults(stories);
+                })
+                .catch(() => {
+                    if (!ignore) setResults([]);
+                });
         } else {
             setResults([]);
         }
+
+        return () => {
+            ignore = true;
+        };
     }, [query]);
 
     return (

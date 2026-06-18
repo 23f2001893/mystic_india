@@ -8,13 +8,21 @@ import StoryCard from '../components/StoryCard';
 import CategoryBadge from '../components/CategoryBadge';
 import ScrollReveal from '../components/ScrollReveal';
 import DecorativeBorder from '../components/DecorativeBorder';
-import { getStoryBySlug, getRelatedStories } from '../data/stories';
+import { useStoryDetail } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
 
 export default function StoryDetailPage() {
     const { slug } = useParams();
-    const story = getStoryBySlug(slug);
+    const { story, relatedStories, loading } = useStoryDetail(slug);
     const { isBookmarked, toggleBookmark } = useBookmarks();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen pt-28 flex items-center justify-center">
+                <p className="text-[var(--text-muted)]">Loading story...</p>
+            </div>
+        );
+    }
 
     if (!story) {
         return (
@@ -37,8 +45,6 @@ export default function StoryDetailPage() {
             </div>
         );
     }
-
-    const relatedStories = getRelatedStories(story.id, 3);
 
     return (
         <div className="min-h-screen pt-20 sm:pt-24">

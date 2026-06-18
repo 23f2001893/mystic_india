@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSun, FiMoon, FiMenu, FiX, FiSearch } from 'react-icons/fi';
+import { FiLogOut, FiMoon, FiSearch, FiSun, FiMenu, FiX } from 'react-icons/fi';
 import { GiIndianPalace } from 'react-icons/gi';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import SearchBar from './SearchBar';
 import AmbientSoundToggle from './AmbientSoundToggle';
 import DecorativeBorder from './DecorativeBorder';
@@ -16,6 +17,7 @@ const navLinks = [
 
 export default function Navbar() {
     const { isDark, toggleTheme } = useTheme();
+    const { user, isAdmin, logout } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -31,6 +33,16 @@ export default function Navbar() {
         setIsMobileOpen(false);
         setIsSearchOpen(false);
     }, [location]);
+
+    const visibleNavLinks = [
+        ...navLinks,
+        ...(isAdmin
+            ? [
+                { path: '/admin/stories', label: 'Story Admin' },
+                { path: '/admin/categories', label: 'Category Admin' },
+            ]
+            : []),
+    ];
 
     return (
         <nav
@@ -56,7 +68,7 @@ export default function Navbar() {
 
                     {/* Desktop Nav */}
                     <div className="hidden md:flex items-center gap-1">
-                        {navLinks.map((link) => (
+                        {visibleNavLinks.map((link) => (
                             <Link
                                 key={link.path}
                                 to={link.path}
@@ -99,6 +111,23 @@ export default function Navbar() {
                             {isDark ? <FiSun className="text-lg" /> : <FiMoon className="text-lg" />}
                         </button>
 
+                        {user ? (
+                            <button
+                                onClick={logout}
+                                className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-saffron hover:bg-saffron/10 transition-all duration-300"
+                            >
+                                <FiLogOut />
+                                Logout
+                            </button>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="hidden sm:inline-flex px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-saffron hover:bg-saffron/10 transition-all duration-300"
+                            >
+                                Login
+                            </Link>
+                        )}
+
                         {/* Mobile Menu Toggle */}
                         <button
                             onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -134,7 +163,7 @@ export default function Navbar() {
                         className="md:hidden bg-[var(--bg-card)] border-t border-[var(--border-color)] overflow-hidden"
                     >
                         <div className="px-4 py-4 space-y-1">
-                            {navLinks.map((link) => (
+                            {visibleNavLinks.map((link) => (
                                 <Link
                                     key={link.path}
                                     to={link.path}
@@ -146,6 +175,29 @@ export default function Navbar() {
                                     {link.label}
                                 </Link>
                             ))}
+                            {user ? (
+                                <button
+                                    onClick={logout}
+                                    className="block w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
+                                >
+                                    Logout
+                                </button>
+                            ) : (
+                                <>
+                                    <Link
+                                        to="/login"
+                                        className="block px-4 py-3 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
+                                    >
+                                        Login
+                                    </Link>
+                                    <Link
+                                        to="/register"
+                                        className="block px-4 py-3 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
+                                    >
+                                        Register
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 )}

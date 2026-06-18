@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mystic India Change Report</title>
+  <style>
+    body {
+      color: #1f2933;
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      margin: 40px;
+    }
+    h1 {
+      border-bottom: 3px solid #d97706;
+      color: #7c2d12;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #92400e;
+      margin-top: 28px;
+    }
+    code {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+    .changed {
+      background: #ecfdf5;
+      border-left: 5px solid #059669;
+      margin: 12px 0;
+      padding: 10px 14px;
+    }
+    .note {
+      background: #eff6ff;
+      border-left: 5px solid #2563eb;
+      margin: 12px 0;
+      padding: 10px 14px;
+    }
+    .warning {
+      background: #fff7ed;
+      border-left: 5px solid #d97706;
+      margin: 12px 0;
+      padding: 10px 14px;
+    }
+    ul {
+      padding-left: 22px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mystic India Change Report</h1>
+  <p><strong>Date:</strong> June 18, 2026</p>
+
+  <h2>Summary</h2>
+  <p>
+    The project was moved from static story data in <code>src/data/stories.js</code>
+    to dynamic FastAPI + PostgreSQL data, then extended with authentication,
+    separate admin story/category CRUD pages, publish controls, category-filtered story management,
+    and an admin analytics dashboard.
+  </p>
+
+  <h2>Backend Changes</h2>
+  <div class="changed">
+    <strong>backend/app.py</strong>
+    <ul>
+      <li>Added FastAPI metadata.</li>
+      <li>Added CORS for the Vite dev server at <code>localhost:5173</code>.</li>
+      <li>Kept SQLAlchemy table creation on startup.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>backend/config.py</strong>
+    <ul>
+      <li>Added <code>DATABASE_URL</code> environment variable support.</li>
+      <li>Kept the local PostgreSQL URL as the default fallback.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>backend/models.py</strong>
+    <ul>
+      <li>Cleaned SQLAlchemy model formatting.</li>
+      <li>Added unique indexed slugs for categories and stories.</li>
+      <li>Used existing <code>User</code>, <code>Categories</code>, and <code>Stories</code> tables.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>backend/schemas.py</strong>
+    <ul>
+      <li>Added Pydantic response schemas for categories and stories.</li>
+      <li>Added request/response schemas for story create/update.</li>
+      <li>Added request/response schemas for category create/update.</li>
+      <li>Added request/response schemas for registration and login.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>backend/controllers.py</strong>
+    <ul>
+      <li>Replaced placeholder story endpoint with real database-backed APIs.</li>
+      <li>Added story list, detail, related, featured, and search endpoints.</li>
+      <li>Added password hashing and signed bearer-token authentication.</li>
+      <li>Added admin-only create, update, and delete story endpoints.</li>
+      <li>Added admin-only create, update, and delete category endpoints.</li>
+      <li>Protected category deletion when stories still belong to that category.</li>
+      <li>The first registered user becomes <code>admin</code>; later users become <code>user</code>.</li>
+    </ul>
+  </div>
+
+  <h2>API Endpoints Added</h2>
+  <ul>
+    <li><code>POST /api/auth/register</code> - register user and return token.</li>
+    <li><code>POST /api/auth/login</code> - login user and return token.</li>
+    <li><code>GET /api/auth/me</code> - return current authenticated user.</li>
+    <li><code>GET /api/categories</code> - return categories with story counts.</li>
+    <li><code>GET /api/stories?category=all&amp;sort=popular</code> - return database stories.</li>
+    <li><code>GET /api/stories/featured?limit=3</code> - return top stories by popularity.</li>
+    <li><code>GET /api/stories/{slug}</code> - return one story by slug.</li>
+    <li><code>GET /api/stories/{story_id}/related?limit=3</code> - return related stories.</li>
+    <li><code>GET /api/search/stories?q=ram</code> - search title, description, and category.</li>
+    <li><code>POST /api/admin/categories</code> - admin creates a category.</li>
+    <li><code>PUT /api/admin/categories/{category_id}</code> - admin updates a category.</li>
+    <li><code>DELETE /api/admin/categories/{category_id}</code> - admin deletes an empty category.</li>
+    <li><code>POST /api/admin/stories</code> - admin creates a story.</li>
+    <li><code>PUT /api/admin/stories/{story_id}</code> - admin updates a story.</li>
+    <li><code>DELETE /api/admin/stories/{story_id}</code> - admin deletes a story.</li>
+  </ul>
+
+  <h2>Frontend Changes</h2>
+  <div class="changed">
+    <strong>src/services/api.js</strong>
+    <ul>
+      <li>Added fetch helpers for public story/category APIs.</li>
+      <li>Added auth helpers for register/login.</li>
+      <li>Added admin helpers for create/update/delete stories.</li>
+      <li>Added admin helpers for create/update/delete categories.</li>
+      <li>Added a publish helper that marks a story as no longer coming soon.</li>
+      <li>Supports <code>VITE_API_BASE_URL</code>, defaulting to <code>http://localhost:8000</code>.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>src/contexts/AuthContext.jsx</strong>
+    <ul>
+      <li>Added localStorage-backed auth state.</li>
+      <li>Exposes current user, token, admin status, login, register, and logout.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>src/pages/AuthPage.jsx</strong>
+    <ul>
+      <li>Added themed login page.</li>
+      <li>Added themed registration page.</li>
+      <li>Redirects admins to the admin dashboard and users to story browsing.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>src/pages/AdminStoriesPage.jsx</strong>
+    <ul>
+      <li>Added admin story create form.</li>
+      <li>Added story list with edit and delete controls.</li>
+      <li>Added category filtering to the admin story list so stories are easier to find.</li>
+      <li>Added a Publish button for draft/coming soon stories.</li>
+      <li>Renamed the video field to <code>Video URL / Embed Link</code> to make video publishing clearer.</li>
+      <li>Added analytics cards for total stories, published stories, coming soon stories, average popularity, and top story.</li>
+      <li>Added category coverage analytics showing story count per category.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>src/pages/AdminCategoriesPage.jsx</strong>
+    <ul>
+      <li>Added a dedicated admin page for category create, edit, and delete.</li>
+      <li>Added a category list showing slug, description, icon, and story count.</li>
+      <li>Links back to story management so admin workflows stay separated but easy to access.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>HomePage, StoriesPage, StoryDetailPage, SearchBar, useSearch, Navbar, App</strong>
+    <ul>
+      <li>Removed static story imports from main story flows.</li>
+      <li>Updated story browsing and search to use backend APIs.</li>
+      <li>Added auth/admin routes and separate navigation links for story admin and category admin.</li>
+      <li>Normal users can read stories. Admins can manage stories.</li>
+    </ul>
+  </div>
+
+  <h2>Rollback Options</h2>
+  <div class="warning">
+    <strong>Recommended:</strong> Make a commit before experimenting further, so rollback is easy.
+    <br>
+    <code>git add .</code><br>
+    <code>git commit -m "Add backend story APIs auth and admin CRUD"</code>
+  </div>
+  <ul>
+    <li>
+      To inspect changed files:
+      <code>git status --short</code>
+    </li>
+    <li>
+      To discard all uncommitted changes and return to the previous checked-out version:
+      <code>git restore .</code>
+    </li>
+    <li>
+      To remove newly created untracked files after restoring:
+      <code>git clean -fd</code>
+    </li>
+    <li>
+      To go back after committing:
+      <code>git revert &lt;commit-hash&gt;</code>
+    </li>
+  </ul>
+  <div class="warning">
+    <strong>Careful:</strong> <code>git restore .</code> and <code>git clean -fd</code>
+    can remove local work. Use them only when you are sure you do not need the current edits.
+  </div>
+
+  <h2>Verification</h2>
+  <ul>
+    <li><code>npm.cmd run build</code> completed successfully after the earlier API/auth/admin work.</li>
+    <li><code>backend\myenv\Scripts\python.exe -m compileall ...</code> completed successfully after the earlier API/auth/admin work.</li>
+    <li>Backend API responded at <code>http://127.0.0.1:8000</code>.</li>
+    <li>Frontend responded at <code>http://127.0.0.1:5173</code>.</li>
+  </ul>
+
+  <h2>Notes</h2>
+  <div class="note">
+    The backend expects PostgreSQL to be reachable at
+    <code>postgresql://postgres:lalit@localhost:5432/mysticindia</code>,
+    unless <code>DATABASE_URL</code> is set.
+  </div>
+  <div class="note">
+    Your seed script <code>backend/seed2.py</code> maps story category slugs to
+    <code>category_id</code>, which matches the database relationship.
+  </div>
+</body>
+</html>
