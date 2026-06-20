@@ -52,12 +52,34 @@
   <h1>Mystic India Change Report</h1>
   <p><strong>Date:</strong> June 18, 2026</p>
 
+  <h2>Latest User Prompt</h2>
+  <div class="note">
+    you did not align the sidebar with first row of card also whe i said to put coming soon in bottom right i mean put in place of the category like cosmic myth which is written in side in place of that put coming soon
+  </div>
+
+  <h2>Latest Actions</h2>
+  <div class="changed">
+    <strong>src/components/StoryCard.jsx</strong>
+    <ul>
+      <li>Moved <code>Coming Soon</code> into the thumbnail bottom-right badge position.</li>
+      <li>Replaced the category badge with <code>Coming Soon</code> for coming-soon stories.</li>
+      <li>Removed the footer <code>Coming Soon</code> chip to reduce card clutter.</li>
+    </ul>
+  </div>
+  <div class="changed">
+    <strong>src/pages/StoriesPage.jsx</strong>
+    <ul>
+      <li>Adjusted the desktop sidebar top offset so it aligns with the first visible story-card row.</li>
+      <li>Uses a larger offset for grouped all-series view and a smaller offset for single-series view.</li>
+    </ul>
+  </div>
+
   <h2>Summary</h2>
   <p>
     The project was moved from static story data in <code>src/data/stories.js</code>
     to dynamic FastAPI + PostgreSQL data, then extended with authentication,
     separate admin story/category CRUD pages, publish controls, category-filtered story management,
-    and an admin analytics dashboard.
+    PDF links, and an admin analytics dashboard.
   </p>
 
   <h2>Backend Changes</h2>
@@ -89,6 +111,7 @@
     <ul>
       <li>Added Pydantic response schemas for categories and stories.</li>
       <li>Added request/response schemas for story create/update.</li>
+      <li>Added <code>pdfUrl</code> to story model/schema/response handling.</li>
       <li>Added request/response schemas for category create/update.</li>
       <li>Added request/response schemas for registration and login.</li>
     </ul>
@@ -160,6 +183,7 @@
       <li>Added category filtering to the admin story list so stories are easier to find.</li>
       <li>Added a Publish button for draft/coming soon stories.</li>
       <li>Renamed the video field to <code>Video URL / Embed Link</code> to make video publishing clearer.</li>
+      <li>Added a <code>PDF URL</code> field to story create/edit.</li>
       <li>Added analytics cards for total stories, published stories, coming soon stories, average popularity, and top story.</li>
       <li>Added category coverage analytics showing story count per category.</li>
     </ul>
@@ -177,8 +201,11 @@
     <ul>
       <li>Removed static story imports from main story flows.</li>
       <li>Updated story browsing and search to use backend APIs.</li>
+      <li>Changed the Stories page series selector from a dropdown to a sidebar.</li>
+      <li>Removed the visible sort dropdown from the Stories page.</li>
       <li>Added auth/admin routes and separate navigation links for story admin and category admin.</li>
       <li>Normal users can read stories. Admins can manage stories.</li>
+      <li>Story detail pages show an <code>Open Story PDF</code> button when <code>pdfUrl</code> exists.</li>
     </ul>
   </div>
 
@@ -229,6 +256,11 @@
   <div class="note">
     Your seed script <code>backend/seed2.py</code> maps story category slugs to
     <code>category_id</code>, which matches the database relationship.
+  </div>
+  <div class="note">
+    For real admin file uploads, configure S3/CloudFront first and store returned URLs
+    in <code>thumbnail</code>, <code>videoUrl</code>, and <code>pdfUrl</code>. Direct video upload
+    should use pre-signed S3 URLs so large files do not pass through the FastAPI server.
   </div>
 </body>
 </html>

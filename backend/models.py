@@ -34,6 +34,7 @@ class Stories(Base):
     category_id = Column(Integer, ForeignKey("categories.id"))
     thumbnail = Column(String)
     videoUrl = Column(String)
+    pdfUrl = Column(String)
     moral = Column(Text)
     duration = Column(String)
     popularity = Column(Integer)

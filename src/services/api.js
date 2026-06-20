@@ -9,6 +9,21 @@ async function request(path) {
 
     return response.json();
 }
+export async function uploadAdminFile(file, fileType, token) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/upload?file_type=${fileType}`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.detail || `File upload failed: ${response.status}`);
+    }
+    return response.json();
+}
 
 async function requestWithBody(path, { method = 'POST', body, token } = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, {

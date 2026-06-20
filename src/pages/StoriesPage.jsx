@@ -1,42 +1,60 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiFilter, FiGrid, FiList, FiChevronDown } from 'react-icons/fi';
-import { GiScrollUnfurled } from 'react-icons/gi';
+import { FiGrid, FiList } from 'react-icons/fi';
 import StoryCard from '../components/StoryCard';
 import ScrollReveal from '../components/ScrollReveal';
 import { useStoriesData } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
 
-const sortOptions = [
-    { value: 'popular', label: 'Most Popular' },
-    { value: 'newest', label: 'Newest First' },
-    { value: 'az', label: 'A to Z' },
+const statusOptions = [
+    { value: 'all', label: 'All Stories' },
+    { value: 'published', label: 'Watch Now' },
+    { value: 'coming-soon', label: 'Coming Soon' },
 ];
 
 export default function StoriesPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeCategory = searchParams.get('category') || 'all';
-    const [sortBy, setSortBy] = useState('popular');
+    const activeStatus = searchParams.get('status') || 'all';
     const [viewMode, setViewMode] = useState('grid');
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const { stories, categories, loading, error } = useStoriesData({
         category: activeCategory,
-        sort: sortBy,
+        sort: 'popular',
     });
 
     const setCategory = (cat) => {
+        const nextParams = new URLSearchParams(searchParams);
         if (cat === 'all') {
-            searchParams.delete('category');
+            nextParams.delete('category');
         } else {
-            searchParams.set('category', cat);
+            nextParams.set('category', cat);
         }
-        setSearchParams(searchParams);
+        setSearchParams(nextParams);
+    };
+
+    const setStatus = (status) => {
+        const nextParams = new URLSearchParams(searchParams);
+        if (status === 'all') {
+            nextParams.delete('status');
+        } else {
+            nextParams.set('status', status);
+        }
+        setSearchParams(nextParams);
     };
 
     const filteredStories = useMemo(() => {
+        if (activeStatus === 'published') {
+            return stories.filter((story) => !story.isComingSoon);
+        }
+
+        if (activeStatus === 'coming-soon') {
+            return stories.filter((story) => story.isComingSoon);
+        }
+
         return stories;
-    }, [stories]);
+    }, [activeStatus, stories]);
 
     return (
         <div className="min-h-screen pt-24 sm:pt-28">
@@ -61,56 +79,75 @@ export default function StoriesPage() {
                 </div>
             </section>
 
-            {/* Filters */}
-            <section className="px-4 mb-10">
-                <div className="max-w-7xl mx-auto">
-                    {/* Top Controls Bar */}
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
-                        <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
-                            {/* Category Filter Dropdown */}
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Series:</span>
-                                <div className="relative flex-1 sm:flex-initial">
-                                    <GiScrollUnfurled className="absolute left-3 top-1/2 -translate-y-1/2 text-saffron text-sm pointer-events-none" />
-                                    <select
-                                        value={activeCategory}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="bg-[var(--bg-card)] text-[var(--text-primary)] text-sm border border-[var(--border-color)] rounded-xl pl-9 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-saffron/20 focus:border-saffron transition-all cursor-pointer w-full sm:min-w-[240px] appearance-none"
-                                    >
-                                        <option value="all">All Series ({stories.length} Stories)</option>
-                                        {categories.map((cat) => (
-                                            <option key={cat.id} value={cat.id}>
-                                                {cat.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-                                </div>
-                            </div>
-
-                            {/* Sort Dropdown */}
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Sort:</span>
-                                <div className="relative flex-1 sm:flex-initial">
-                                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-saffron text-sm pointer-events-none" />
-                                    <select
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                        className="bg-[var(--bg-card)] text-[var(--text-primary)] text-sm border border-[var(--border-color)] rounded-xl pl-9 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-saffron/20 focus:border-saffron transition-all cursor-pointer w-full sm:min-w-[170px] appearance-none"
-                                    >
-                                        {sortOptions.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-                                </div>
-                            </div>
+            <section className="px-4 pb-20">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+                    <aside className={`lg:sticky lg:top-28 h-fit rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 ${activeCategory === 'all' ? 'lg:mt-[154px]' : 'lg:mt-[72px]'}`}>
+                        <div className="mb-4 border-b border-[var(--border-color)] pb-3">
+                            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Series</p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden sm:inline">View Mode:</span>
+                        <div className="space-y-1">
+                            <button
+                                onClick={() => setCategory('all')}
+                                className={`w-full border-l-2 px-3 py-2.5 text-left text-sm transition-all ${activeCategory === 'all'
+                                    ? 'border-saffron bg-saffron/10 text-saffron'
+                                    : 'border-transparent text-[var(--text-secondary)] hover:border-saffron/40 hover:bg-saffron/5 hover:text-saffron'}`}
+                            >
+                                <span className="font-medium">All Series</span>
+                                <span className="block text-xs opacity-75">{stories.length} stories</span>
+                            </button>
+
+                            {categories.map((cat) => {
+                                const count = stories.filter((story) => story.category === cat.id).length;
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => setCategory(cat.id)}
+                                        className={`w-full border-l-2 px-3 py-2.5 text-left text-sm transition-all ${activeCategory === cat.id
+                                            ? 'border-saffron bg-saffron/10 text-saffron'
+                                            : 'border-transparent text-[var(--text-secondary)] hover:border-saffron/40 hover:bg-saffron/5 hover:text-saffron'}`}
+                                    >
+                                        <span className="flex items-start gap-3">
+                                            <span>
+                                                <span className="block font-medium leading-snug">{cat.name}</span>
+                                                <span className="block text-xs opacity-75">{count} stories</span>
+                                            </span>
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </aside>
+
+                    <div>
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
+                        <div>
+                            <p className="text-xs text-[var(--text-muted)]">
+                                {loading ? 'Loading stories...' : `Showing ${filteredStories.length} ${filteredStories.length === 1 ? 'story' : 'stories'}`}
+                                {activeCategory !== 'all' && (
+                                    <span> in <span className="text-saffron font-medium">{categories.find(c => c.id === activeCategory)?.name}</span></span>
+                                )}
+                                {activeStatus !== 'all' && (
+                                    <span> marked <span className="text-saffron font-medium">{statusOptions.find(option => option.value === activeStatus)?.label}</span></span>
+                                )}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex items-center border border-[var(--border-color)] rounded-xl overflow-hidden bg-[var(--bg-card)] p-1">
+                                {statusOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => setStatus(option.value)}
+                                        className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeStatus === option.value
+                                            ? 'bg-saffron text-white shadow-md'
+                                            : 'text-[var(--text-muted)] hover:text-saffron hover:bg-saffron/5'}`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+
                             <div className="flex items-center border border-[var(--border-color)] rounded-xl overflow-hidden bg-[var(--bg-card)] p-1">
                                 <button
                                     onClick={() => setViewMode('grid')}
@@ -134,20 +171,6 @@ export default function StoriesPage() {
                         </div>
                     </div>
 
-
-                    {/* Results count */}
-                    <p className="text-xs text-[var(--text-muted)] mt-6">
-                        {loading ? 'Loading stories...' : `Showing ${filteredStories.length} ${filteredStories.length === 1 ? 'story' : 'stories'}`}
-                        {activeCategory !== 'all' && (
-                            <span> in <span className="text-saffron font-medium">{categories.find(c => c.id === activeCategory)?.name}</span></span>
-                        )}
-                    </p>
-                </div>
-            </section>
-
-            {/* Stories Grid */}
-            <section className="px-4 pb-20">
-                <div className="max-w-7xl mx-auto">
                     {error && (
                         <div className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
                             {error}
@@ -155,7 +178,7 @@ export default function StoriesPage() {
                     )}
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={activeCategory + sortBy + viewMode}
+                            key={activeCategory + activeStatus + viewMode}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -233,7 +256,7 @@ export default function StoriesPage() {
                             <button
                                 onClick={() => {
                                     setCategory('all');
-                                    setSortBy('popular');
+                                    setStatus('all');
                                 }}
                                 className="bg-saffron text-white px-6 py-2 rounded-xl font-medium hover:shadow-lg transition-all"
                             >
@@ -241,6 +264,7 @@ export default function StoriesPage() {
                             </button>
                         </div>
                     )}
+                    </div>
                 </div>
             </section>
         </div>

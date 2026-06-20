@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiBookmark, FiShare2, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiBook, FiBookmark, FiClock, FiDownload } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
 import { GiScrollUnfurled } from 'react-icons/gi';
 import VideoPlayer from '../components/VideoPlayer';
@@ -10,6 +10,7 @@ import ScrollReveal from '../components/ScrollReveal';
 import DecorativeBorder from '../components/DecorativeBorder';
 import { useStoryDetail } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
+import { LuBookOpen } from "react-icons/lu";
 
 export default function StoryDetailPage() {
     const { slug } = useParams();
@@ -106,7 +107,7 @@ export default function StoryDetailPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] mb-6">
+                            {/* <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] mb-6">
                                 <span className="flex items-center gap-1">
                                     <FiClock className="text-saffron" /> {story.duration}
                                 </span>
@@ -115,7 +116,9 @@ export default function StoryDetailPage() {
 
                             <p className="text-[var(--text-secondary)] leading-relaxed text-lg mb-8">
                                 {story.description}
-                            </p>
+                            </p> */}
+
+        
 
                             <DecorativeBorder className="mb-8" />
 
@@ -203,11 +206,42 @@ export default function StoryDetailPage() {
                             )}
 
                             {/* Quick Stats */}
-                            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5">
-                                <h3 className="font-heading text-lg text-[var(--text-primary)] mb-3">
-                                    Quick Info
-                                </h3>
-                                <div className="space-y-3 text-sm">
+                            {story.pdfUrl && (
+    <a
+        href={story.pdfUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="group flex w-full flex-col items-center justify-center rounded-2xl border border-saffron/30 bg-gradient-to-br from-saffron/10 to-gold/10 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-saffron hover:bg-saffron hover:shadow-lg hover:shadow-saffron/20"
+    >
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-saffron/15 text-saffron transition-all duration-300 group-hover:bg-white/20 group-hover:text-white">
+            <LuBookOpen className="block h-8 w-8 shrink-0" />
+        </div>
+
+        <span className="block w-full text-center font-heading text-xl text-[var(--text-primary)] transition-colors duration-300 group-hover:text-white">
+            Open Story PDF
+        </span>
+
+        <span className="mt-1 block w-full text-center text-xs text-[var(--text-muted)] transition-colors duration-300 group-hover:text-white/80">
+            Read the complete story notes
+        </span>
+    </a>
+)}
+                            
+                            {/*                         
+                                {story.pdfUrl && (
+                                <a
+                                    href={story.pdfUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex flex-col itme-center justify-center p-6 border rounded-lg border-saffron text-saffron transition-all hover:bg-saffron hover:text-white"
+                                    >
+                                   <LuBookOpen className="size-20 text-white mb-3 items-cener justify-center" /> 
+                                   <span className="font-medium">Open Story PDF</span>
+                                    
+                                </a>
+                            )} */}
+
+                                {/* <div className="space-y-3 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-[var(--text-muted)]">Category</span>
                                         <CategoryBadge category={story.category} size="sm" />
@@ -220,8 +254,8 @@ export default function StoryDetailPage() {
                                         <span className="text-[var(--text-muted)]">Popularity</span>
                                         <span className="text-gold">{story.popularity}%</span>
                                     </div>
-                                </div>
-                            </div>
+                                </div> */}
+                            
                         </div>
                     </div>
                 </div>

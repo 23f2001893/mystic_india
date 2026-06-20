@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { FiEdit2, FiPlus, FiSave, FiSend, FiTrash2, FiX } from 'react-icons/fi';
+import { FiCheckCircle, FiEdit2, FiFileText, FiImage, FiPlus, FiSave, FiSend, FiTrash2, FiUploadCloud, FiVideo, FiX } from 'react-icons/fi';
 import {
     createStory,
     deleteStory,
     publishStory,
     updateStory,
+    uploadAdminFile,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useStoriesData } from '../hooks/useStoriesData';
@@ -18,12 +19,20 @@ const emptyForm = {
     category: '',
     thumbnail: '',
     videoUrl: '',
+    pdfUrl: '',
     moral: '',
     duration: '',
     popularity: 0,
     isComingSoon: true,
     createdAt: new Date().toISOString().slice(0, 10),
 };
+
+const normalizeSlug = (value) =>
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 
 export default function AdminStoriesPage() {
     const { token, user, isAdmin } = useAuth();
@@ -33,6 +42,7 @@ export default function AdminStoriesPage() {
     const [message, setMessage] = useState('');
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [uploadingField, setUploadingField] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const categoryOptions = useMemo(() => categories.map((category) => category.id), [categories]);
     const filteredStories = useMemo(() => {
@@ -82,6 +92,7 @@ export default function AdminStoriesPage() {
             category: story.category || '',
             thumbnail: story.thumbnail || '',
             videoUrl: story.videoUrl || '',
+            pdfUrl: story.pdfUrl || '',
             moral: story.moral || '',
             duration: story.duration || '',
             popularity: story.popularity || 0,
@@ -101,6 +112,7 @@ export default function AdminStoriesPage() {
         try {
             const payload = {
                 ...form,
+                slug: normalizeSlug(form.slug),
                 popularity: Number(form.popularity) || 0,
                 category: form.category || categoryOptions[0],
             };
@@ -142,6 +154,26 @@ export default function AdminStoriesPage() {
             window.location.reload();
         } catch (err) {
             setFormError(err.message || 'Unable to publish story');
+        }
+    };
+
+    const handleFileUpload = async (event, fileType, fieldName) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadingField(fieldName);
+        setFormError('');
+        setMessage('');
+
+        try {
+            const result = await uploadAdminFile(file, fileType, token);
+            setForm((current) => ({ ...current, [fieldName]: result.url }));
+            setMessage(`${file.name} uploaded successfully.`);
+        } catch (err) {
+            setFormError(err.message || 'Unable to upload file');
+        } finally {
+            setUploadingField('');
+            event.target.value = '';
         }
     };
 
@@ -228,7 +260,7 @@ export default function AdminStoriesPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <AdminInput label="Slug" value={form.slug} onChange={(value) => updateField('slug', value)} required />
+                            <AdminInput label="Slug" value={form.slug} onChange={(value) => updateField('slug', normalizeSlug(value))} required />
                             <AdminInput label="Title" value={form.title} onChange={(value) => updateField('title', value)} required />
                             <AdminInput label="Subtitle" value={form.subtitle} onChange={(value) => updateField('subtitle', value)} />
                             <AdminTextarea label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
@@ -251,8 +283,38 @@ export default function AdminStoriesPage() {
                                 </select>
                             </label>
 
-                            <AdminInput label="Thumbnail URL" value={form.thumbnail} onChange={(value) => updateField('thumbnail', value)} />
-                            <AdminInput label="Video URL / Embed Link" value={form.videoUrl} onChange={(value) => updateField('videoUrl', value)} />
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <UploadField
+                                    id="thumbnail-upload"
+                                    label="Thumbnail"
+                                    helper="Image file"
+                                    accept="image/*"
+                                    value={form.thumbnail}
+                                    icon={FiImage}
+                                    uploading={uploadingField === 'thumbnail'}
+                                    onChange={(event) => handleFileUpload(event, 'thumbnail', 'thumbnail')}
+                                />
+                                <UploadField
+                                    id="video-upload"
+                                    label="Video"
+                                    helper="Story video"
+                                    accept="video/*"
+                                    value={form.videoUrl}
+                                    icon={FiVideo}
+                                    uploading={uploadingField === 'videoUrl'}
+                                    onChange={(event) => handleFileUpload(event, 'video', 'videoUrl')}
+                                />
+                                <UploadField
+                                    id="pdf-upload"
+                                    label="PDF"
+                                    helper="Story PDF"
+                                    accept="application/pdf"
+                                    value={form.pdfUrl}
+                                    icon={FiFileText}
+                                    uploading={uploadingField === 'pdfUrl'}
+                                    onChange={(event) => handleFileUpload(event, 'pdf', 'pdfUrl')}
+                                />
+                            </div>
                             <AdminTextarea label="Moral" value={form.moral} onChange={(value) => updateField('moral', value)} />
 
                             <div className="grid grid-cols-2 gap-4">
@@ -376,6 +438,30 @@ export default function AdminStoriesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+function UploadField({ id, label, helper, accept, value, icon: Icon, uploading, onChange }) {
+    return (
+        <label
+            htmlFor={id}
+            className="group flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-4 text-center transition-all hover:border-saffron hover:bg-saffron/5"
+        >
+            <input id={id} type="file" accept={accept} onChange={onChange} className="sr-only" />
+            <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-saffron/10 text-saffron transition-all group-hover:bg-saffron group-hover:text-white">
+                {uploading ? <FiUploadCloud className="animate-pulse text-xl" /> : <Icon className="text-xl" />}
+            </span>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">{label}</span>
+            <span className="mt-1 text-xs text-[var(--text-muted)]">
+                {uploading ? 'Uploading...' : value ? 'Uploaded' : helper}
+            </span>
+            {value && !uploading && (
+                <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600">
+                    <FiCheckCircle />
+                    Ready
+                </span>
+            )}
+        </label>
     );
 }
 

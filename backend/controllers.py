@@ -6,9 +6,11 @@ import os
 import secrets
 import time
 
-from fastapi import Depends, Header, HTTPException, Query, status
-from sqlalchemy import or_
+from botocore.exceptions import BotoCoreError, ClientError
+from fastapi import Depends, Header, HTTPException, Query, status, UploadFile, File
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session as DbSession, joinedload
+from s3_utils import upload_file_to_s3
 
 from app import app
 from database import get_db
@@ -71,6 +73,7 @@ def serialize_story(story: Stories) -> StoryOut:
         category_id=story.category_id,
         thumbnail=story.thumbnail,
         videoUrl=story.videoUrl,
+        pdfUrl=story.pdfUrl,
         moral=story.moral,
         duration=story.duration,
         popularity=story.popularity,
@@ -159,9 +162,11 @@ def get_category_by_slug(db: DbSession, slug: str) -> Categories:
 def apply_story_payload(story: Stories, payload: StoryCreate | StoryUpdate, db: DbSession) -> Stories:
     data = payload.model_dump(exclude_unset=True)
     category_slug = data.pop("category", None)
+    if "slug" in data and data["slug"] is not None:
+        data["slug"] = data["slug"].strip()
 
     if category_slug:
-        story.category_id = get_category_by_slug(db, category_slug).id
+        story.category_id = get_category_by_slug(db, category_slug.strip()).id
 
     for field, value in data.items():
         setattr(story, field, value)
@@ -204,6 +209,32 @@ def register_user(payload: UserCreate, db: DbSession = Depends(get_db)):
     db.commit()
     db.refresh(user)
     return AuthOut(token=create_token(user), user=user)
+@app.post("/api/admin/upload", status_code=status.HTTP_201_CREATED)
+def upload_file(
+    file: UploadFile = File(...),
+    file_type: str = "misc",
+    _: User = Depends(require_admin),
+):
+    allowed_folders = {
+        "thumbnail": "thumbnails",
+        "video": "videos",
+        "pdf": "pdfs",
+    }
+    folder_name = allowed_folders.get(file_type)
+    if not folder_name:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+
+    try:
+        file_url = upload_file_to_s3(file, folder_name)
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except (BotoCoreError, ClientError) as exc:
+        raise HTTPException(status_code=502, detail=f"S3 upload failed: {exc}") from exc
+
+    return {
+        "url": file_url,
+        "fileType": file_type,
+    }
 
 
 @app.post("/api/auth/login", response_model=AuthOut)
@@ -324,7 +355,8 @@ def create_story(
     db: DbSession = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    existing_story = db.query(Stories).filter(Stories.slug == payload.slug).first()
+    clean_slug = payload.slug.strip()
+    existing_story = db.query(Stories).filter(func.trim(Stories.slug) == clean_slug).first()
     if existing_story:
         raise HTTPException(status_code=409, detail="Story slug already exists")
 
@@ -346,8 +378,9 @@ def update_story(
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    if payload.slug and payload.slug != story.slug:
-        existing_story = db.query(Stories).filter(Stories.slug == payload.slug).first()
+    if payload.slug and payload.slug.strip() != (story.slug or "").strip():
+        clean_slug = payload.slug.strip()
+        existing_story = db.query(Stories).filter(func.trim(Stories.slug) == clean_slug).first()
         if existing_story:
             raise HTTPException(status_code=409, detail="Story slug already exists")
 
@@ -389,10 +422,11 @@ def get_featured_stories(
 
 @app.get("/api/stories/{slug}", response_model=StoryOut)
 def get_story_by_slug(slug: str, db: DbSession = Depends(get_db)):
+    clean_slug = slug.strip()
     story = (
         db.query(Stories)
         .options(joinedload(Stories.category))
-        .filter(Stories.slug == slug)
+        .filter(func.trim(Stories.slug) == clean_slug)
         .first()
     )
     if not story:

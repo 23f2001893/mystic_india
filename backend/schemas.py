@@ -41,6 +41,7 @@ class StoryOut(BaseModel):
     category_id: int | None = None
     thumbnail: str | None = None
     videoUrl: str | None = None
+    pdfUrl: str | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = 0
@@ -56,6 +57,7 @@ class StoryCreate(BaseModel):
     category: str
     thumbnail: str | None = None
     videoUrl: str | None = None
+    pdfUrl: str | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = 0
@@ -71,6 +73,7 @@ class StoryUpdate(BaseModel):
     category: str | None = None
     thumbnail: str | None = None
     videoUrl: str | None = None
+    pdfUrl: str | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = None

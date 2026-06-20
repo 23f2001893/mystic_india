@@ -25,22 +25,11 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                {/* Coming Soon Overlay */}
-                {story.isComingSoon && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-saffron/90 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-white/20">
-                            Coming Soon
-                        </div>
-                    </div>
-                )}
-
                 {/* Duration badge */}
-                {!story.isComingSoon && (
-                    <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
-                        <FiClock className="text-gold text-xs" />
-                        <span className="text-white text-xs font-medium">{story.duration}</span>
-                    </div>
-                )}
+                <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
+                    <FiClock className="text-gold text-xs" />
+                    <span className="text-white text-xs font-medium">{story.duration}</span>
+                </div>
 
                 {/* Bookmark button */}
                 <button
@@ -59,8 +48,13 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                 </button>
 
                 {/* Category badge - hidden on mobile list view if redundant */}
-                <div className={`absolute bottom-3 right-3 ${isList ? 'sm:hidden' : ''}`}>
-                    <CategoryBadge category={story.category} size="sm" />
+                <div className={`absolute bottom-3 right-3 ${isList ? 'hidden sm:flex' : 'flex'}`}>
+                    {story.isComingSoon && (
+                        <span className="rounded-full bg-saffron/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-lg">
+                            Coming Soon
+                        </span>
+                    )
+                }
                 </div>
             </div>
 
@@ -75,7 +69,11 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                         </Link>
                         {isList && (
                             <div className="hidden sm:block">
-                                <CategoryBadge category={story.category} size="md" />
+                                {story.isComingSoon && (
+                                    <span className="rounded-full bg-saffron/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-saffron">
+                                        Coming Soon
+                                    </span>
+                                ) }
                             </div>
                         )}
                     </div>
@@ -89,8 +87,8 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                 </div>
 
                 {/* Decorative bottom border */}
-                <div className={`pt-4 border-t border-[var(--border-color)] flex items-center justify-between mt-auto`}>
-                    <div className="flex items-center gap-4">
+                <div className={`pt-4 border-t border-[var(--border-color)] flex items-center justify-between gap-4 mt-auto`}>
+                    <div className="flex min-w-0 items-center gap-4">
                         <span className="text-xs text-[var(--text-muted)]">
                             ⭐ {story.popularity}% popularity
                         </span>
@@ -100,7 +98,7 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                             </span>
                         )}
                     </div>
-                    <Link to={`/story/${story.slug}`} className="text-xs font-medium text-saffron group-hover:translate-x-1 transition-transform duration-300 inline-flex items-center gap-1">
+                    <Link to={`/story/${story.slug}`} className="shrink-0 text-xs font-medium text-saffron group-hover:translate-x-1 transition-transform duration-300 inline-flex items-center gap-1">
                         {story.isComingSoon ? 'Details →' : 'Watch Story →'}
                     </Link>
                 </div>
