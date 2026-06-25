@@ -1,4 +1,5 @@
 import uuid
+
 import boto3
 from fastapi import UploadFile
 from config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_S3_BUCKET_NAME

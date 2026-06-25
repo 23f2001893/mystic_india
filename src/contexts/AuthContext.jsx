@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { loginUser, registerUser } from '../services/api';
+import { fetchCurrentUser,loginUser, registerUser } from '../services/api';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'mystic-india-auth';
@@ -8,11 +8,29 @@ export function AuthProvider({ children }) {
     const [auth, setAuth] = useState(null);
 
     useEffect(() => {
-        const savedAuth = localStorage.getItem(STORAGE_KEY);
-        if (savedAuth) {
-            setAuth(JSON.parse(savedAuth));
+        async function restoreSession(){
+            const savedAuth = localStorage.getItem(STORAGE_KEY)
+            if(!savedAuth) return;
+            try{
+                const parsedAuth =JSON.parse(savedAuth);
+                if(!parsedAuth.token){
+                    localStorage.removeItem(STORAGE_KEY);
+                    return;
+                }
+                const user =await fetchCurrentUser(parsedAuth.token);
+                setAuth({
+                    token:parsedAuth.token,
+                    user,
+                });
+            }
+            catch(error){
+                localStorage.removeItem(STORAGE_KEY);
+                setAuth(null);
+            }
         }
-    }, []);
+        restoreSession();
+        }
+    , []);
 
     const saveAuth = (nextAuth) => {
         setAuth(nextAuth);

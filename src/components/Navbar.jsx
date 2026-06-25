@@ -38,8 +38,7 @@ export default function Navbar() {
         ...navLinks,
         ...(isAdmin
             ? [
-                { path: '/admin/stories', label: 'Story Admin' },
-                { path: '/admin/categories', label: 'Category Admin' },
+                { path: '/admin/stories', label: 'Admin', matchPrefix: '/admin' },
             ]
             : []),
     ];
@@ -72,13 +71,13 @@ export default function Navbar() {
                             <Link
                                 key={link.path}
                                 to={link.path}
-                                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${location.pathname === link.path
+                                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${(link.matchPrefix ? location.pathname.startsWith(link.matchPrefix) : location.pathname === link.path)
                                         ? 'text-saffron'
                                         : 'text-[var(--text-secondary)] hover:text-saffron hover:bg-saffron/5'
                                     }`}
                             >
                                 {link.label}
-                                {location.pathname === link.path && (
+                                {(link.matchPrefix ? location.pathname.startsWith(link.matchPrefix) : location.pathname === link.path) && (
                                     <motion.div
                                         layoutId="activeNav"
                                         className="absolute bottom-0 left-2 right-2 h-0.5 bg-saffron rounded-full"
@@ -111,7 +110,7 @@ export default function Navbar() {
                             {isDark ? <FiSun className="text-lg" /> : <FiMoon className="text-lg" />}
                         </button>
 
-                        {user ? (
+                        {user && (
                             <button
                                 onClick={logout}
                                 className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-saffron hover:bg-saffron/10 transition-all duration-300"
@@ -119,13 +118,6 @@ export default function Navbar() {
                                 <FiLogOut />
                                 Logout
                             </button>
-                        ) : (
-                            <Link
-                                to="/login"
-                                className="hidden sm:inline-flex px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-saffron hover:bg-saffron/10 transition-all duration-300"
-                            >
-                                Login
-                            </Link>
                         )}
 
                         {/* Mobile Menu Toggle */}
@@ -167,7 +159,7 @@ export default function Navbar() {
                                 <Link
                                     key={link.path}
                                     to={link.path}
-                                    className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${location.pathname === link.path
+                                    className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${(link.matchPrefix ? location.pathname.startsWith(link.matchPrefix) : location.pathname === link.path)
                                             ? 'bg-saffron/10 text-saffron'
                                             : 'text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron'
                                         }`}
@@ -175,28 +167,13 @@ export default function Navbar() {
                                     {link.label}
                                 </Link>
                             ))}
-                            {user ? (
+                            {user && (
                                 <button
                                     onClick={logout}
                                     className="block w-full px-4 py-3 rounded-lg text-left text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
                                 >
                                     Logout
                                 </button>
-                            ) : (
-                                <>
-                                    <Link
-                                        to="/login"
-                                        className="block px-4 py-3 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
-                                    >
-                                        Login
-                                    </Link>
-                                    <Link
-                                        to="/register"
-                                        className="block px-4 py-3 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-saffron/5 hover:text-saffron transition-all duration-300"
-                                    >
-                                        Register
-                                    </Link>
-                                </>
                             )}
                         </div>
                     </motion.div>

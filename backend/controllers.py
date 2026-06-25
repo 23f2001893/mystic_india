@@ -1,13 +1,13 @@
-import base64
 import hashlib
 import hmac
-import json
 import os
 import secrets
-import time
+from datetime import datetime, timedelta, timezone
 
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import Depends, Header, HTTPException, Query, status, UploadFile, File
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session as DbSession, joinedload
 from s3_utils import upload_file_to_s3
@@ -29,8 +29,10 @@ from schemas import (
 )
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-for-production")
-TOKEN_TTL_SECONDS = 60 * 60 * 24
+SECRET_KEY = os.getenv("SECRET_KEY")
+TOKEN_TTL_SECONDS = 10*60
+
+JWT_ALGORITHM = "HS256"
 
 
 CATEGORY_META = {
@@ -99,36 +101,22 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def create_token(user: User) -> str:
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=TOKEN_TTL_SECONDS)
     payload = {
-        "sub": user.id,
+        "sub": str(user.id),
         "role": user.role,
-        "exp": int(time.time()) + TOKEN_TTL_SECONDS,
+        "exp": expires_at,
     }
-    payload_json = json.dumps(payload, separators=(",", ":")).encode()
-    payload_part = base64.urlsafe_b64encode(payload_json).decode().rstrip("=")
-    signature = hmac.new(SECRET_KEY.encode(), payload_part.encode(), hashlib.sha256).digest()
-    signature_part = base64.urlsafe_b64encode(signature).decode().rstrip("=")
-    return f"{payload_part}.{signature_part}"
+    return jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 
 def decode_token(token: str) -> dict:
     try:
-        payload_part, signature_part = token.split(".", 1)
-        expected_signature = hmac.new(SECRET_KEY.encode(), payload_part.encode(), hashlib.sha256).digest()
-        expected_signature_part = base64.urlsafe_b64encode(expected_signature).decode().rstrip("=")
-
-        if not hmac.compare_digest(signature_part, expected_signature_part):
-            raise ValueError
-
-        padded_payload = payload_part + "=" * (-len(payload_part) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(padded_payload))
-    except (ValueError, json.JSONDecodeError):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-    if payload.get("exp", 0) < time.time():
+        return jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-
-    return payload
+    except InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 def get_current_user(
@@ -139,7 +127,12 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
 
     payload = decode_token(authorization.removeprefix("Bearer ").strip())
-    user = db.query(User).filter(User.id == payload.get("sub")).first()
+    try:
+        user_id = int(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 

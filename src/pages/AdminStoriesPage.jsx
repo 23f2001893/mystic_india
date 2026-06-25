@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { FiCheckCircle, FiEdit2, FiFileText, FiImage, FiPlus, FiSave, FiSend, FiTrash2, FiUploadCloud, FiVideo, FiX } from 'react-icons/fi';
+import { Navigate } from 'react-router-dom';
+import { FiCheckCircle, FiEdit2, FiFileText, FiImage, FiPlus, FiSave, FiSend, FiTrash2, FiUploadCloud, FiVideo } from 'react-icons/fi';
 import {
     createStory,
     deleteStory,
@@ -10,6 +10,8 @@ import {
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useStoriesData } from '../hooks/useStoriesData';
+import AdminSidePanel from '../components/AdminSidePanel';
+import AdminModal from '../components/AdminModal';
 
 const emptyForm = {
     slug: '',
@@ -43,6 +45,7 @@ export default function AdminStoriesPage() {
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
     const [uploadingField, setUploadingField] = useState('');
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const categoryOptions = useMemo(() => categories.map((category) => category.id), [categories]);
     const filteredStories = useMemo(() => {
@@ -53,23 +56,14 @@ export default function AdminStoriesPage() {
         const totalStories = stories.length;
         const comingSoon = stories.filter((story) => story.isComingSoon).length;
         const published = totalStories - comingSoon;
-        const averagePopularity = totalStories
-            ? Math.round(stories.reduce((sum, story) => sum + (Number(story.popularity) || 0), 0) / totalStories)
-            : 0;
-        const topStory = [...stories].sort((a, b) => (b.popularity || 0) - (a.popularity || 0))[0];
-        const activeCategories = new Set(stories.map((story) => story.category)).size;
-
         return {
             totalStories,
             comingSoon,
             published,
-            averagePopularity,
-            topStory,
-            activeCategories,
         };
     }, [stories]);
 
-    if (!user) return <Navigate to="/login" replace />;
+    if (!user) return <Navigate to="/" replace />;
     if (!isAdmin) return <Navigate to="/stories" replace />;
 
     const updateField = (field, value) => {
@@ -80,6 +74,15 @@ export default function AdminStoriesPage() {
         setForm({ ...emptyForm, category: categoryOptions[0] || '' });
         setEditingId(null);
         setFormError('');
+        setIsFormOpen(false);
+    };
+
+    const openNewStoryForm = () => {
+        setForm({ ...emptyForm, category: categoryOptions[0] || '' });
+        setEditingId(null);
+        setFormError('');
+        setMessage('');
+        setIsFormOpen(true);
     };
 
     const startEdit = (story) => {
@@ -100,6 +103,7 @@ export default function AdminStoriesPage() {
             createdAt: story.createdAt || new Date().toISOString().slice(0, 10),
         });
         setFormError('');
+        setIsFormOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -178,38 +182,36 @@ export default function AdminStoriesPage() {
     };
 
     return (
-        <div className="min-h-screen pt-24 sm:pt-28 px-4 pb-16 parchment-bg">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
-                    <div>
-                        <p className="text-saffron text-sm tracking-[0.3em] uppercase mb-2 font-medium">
-                            Admin Workspace
-                        </p>
-                        <h1 className="font-heading text-3xl sm:text-4xl text-[var(--text-primary)]">
-                            Story Management
-                        </h1>
-                        
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                        <Link to="/admin/categories" className="text-sm font-medium text-saffron hover:underline">
-                            Manage Categories
-                        </Link>
-                        <Link to="/stories" className="text-sm font-medium text-saffron hover:underline">
-                            View public stories
-                        </Link>
-                    </div>
-                </div>
+        <div className="min-h-screen pt-20 sm:pt-24 parchment-bg">
+            <div className="grid lg:grid-cols-[220px_1fr]">
+                <AdminSidePanel />
+                <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-7xl">
+                        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-saffron">
+                                    Admin Workspace
+                                </p>
+                                <h1 className="font-heading text-3xl text-[var(--text-primary)] sm:text-4xl">
+                                    Story Management
+                                </h1>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    type="button"
+                                    onClick={openNewStoryForm}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-saffron px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-saffron-dark"
+                                >
+                                    <FiPlus />
+                                    Add Story
+                                </button>
+                            </div>
+                        </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <AnalyticsCard label="Total Stories" value={loading ? '...' : analytics.totalStories} />
                     <AnalyticsCard label="Published" value={loading ? '...' : analytics.published} />
                     <AnalyticsCard label="Coming Soon" value={loading ? '...' : analytics.comingSoon} />
-                    <AnalyticsCard label="Avg Popularity" value={loading ? '...' : `${analytics.averagePopularity}%`} />
-                    <AnalyticsCard
-                        label="Top Story"
-                        value={loading ? '...' : analytics.topStory?.title || 'No stories'}
-                        compact
-                    />
                 </div>
 
                 {/* <div className="mb-8 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 shadow-lg">
@@ -239,27 +241,14 @@ export default function AdminStoriesPage() {
                     </div>
                 </div> */}
 
-                <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8">
+                <div className="space-y-8">
+                    {isFormOpen && (
+                    <AdminModal title={editingId ? 'Edit Story' : 'Add Story'} onClose={resetForm}>
                     <form
                         onSubmit={handleSubmit}
-                        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 sm:p-6 shadow-lg h-fit"
+                        className="space-y-5"
                     >
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="font-heading text-2xl text-[var(--text-primary)]">
-                                {editingId ? 'Edit Story' : 'New Story'}
-                            </h2>
-                            {editingId && (
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-saffron/10 hover:text-saffron"
-                                >
-                                    <FiX />
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="space-y-4">
+                        <div className="grid gap-4 lg:grid-cols-2">
                             <AdminInput label="Slug" value={form.slug} onChange={(value) => updateField('slug', normalizeSlug(value))} required />
                             <AdminInput label="Title" value={form.title} onChange={(value) => updateField('title', value)} required />
                             <AdminInput label="Subtitle" value={form.subtitle} onChange={(value) => updateField('subtitle', value)} />
@@ -356,6 +345,8 @@ export default function AdminStoriesPage() {
                             {saving ? 'Saving...' : editingId ? 'Update Story' : 'Create Story'}
                         </button>
                     </form>
+                    </AdminModal>
+                    )}
 
                     <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-lg overflow-hidden">
                         <div className="border-b border-[var(--border-color)] px-5 py-4">
@@ -436,6 +427,8 @@ export default function AdminStoriesPage() {
 
                     </div>
                 </div>
+                    </div>
+                </main>
             </div>
         </div>
     );

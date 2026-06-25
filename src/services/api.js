@@ -117,3 +117,9 @@ export function deleteCategory(categoryId, token) {
         token,
     });
 }
+export function fetchCurrentUser(token){
+    return requestWithBody('/api/auth/me',{
+        method:"GET",
+        token
+    })
+}

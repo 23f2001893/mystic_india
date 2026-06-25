@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiBook, FiBookmark, FiClock, FiDownload } from 'react-icons/fi';
+import { FiArrowLeft, FiBookmark } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
 import { GiScrollUnfurled } from 'react-icons/gi';
 import VideoPlayer from '../components/VideoPlayer';
@@ -11,11 +12,23 @@ import DecorativeBorder from '../components/DecorativeBorder';
 import { useStoryDetail } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
 import { LuBookOpen } from "react-icons/lu";
+import PdfViewer from '../components/PdfViewer';
 
 export default function StoryDetailPage() {
     const { slug } = useParams();
     const { story, relatedStories, loading } = useStoryDetail(slug);
     const { isBookmarked, toggleBookmark } = useBookmarks();
+    const [selectedPdf, setSelectedPdf] = useState(null);
+    const [isPdfOpen, setIsPdfOpen] = useState(false);
+
+    const openPdf = () => {
+        setSelectedPdf(story.pdfUrl);
+        setIsPdfOpen(true);
+    };
+
+    const openVideo = () => {
+        setIsPdfOpen(false);
+    };
 
     if (loading) {
         return (
@@ -61,21 +74,51 @@ export default function StoryDetailPage() {
 
             {/* Video Player */}
             <section className="max-w-6xl mx-auto px-4 mb-8">
+                {story.pdfUrl && (
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+                        <button
+                            type="button"
+                            onClick={openVideo}
+                            className={`inline-flex flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
+                                !isPdfOpen
+                                    ? 'border-saffron bg-saffron text-white shadow-lg shadow-saffron/20'
+                                    : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-saffron hover:text-saffron'
+                            }`}
+                        >
+                            Video
+                        </button>
+                        <button
+                            type="button"
+                            onClick={openPdf}
+                            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
+                                isPdfOpen
+                                    ? 'border-saffron bg-saffron text-white shadow-lg shadow-saffron/20'
+                                    : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-saffron hover:text-saffron'
+                            }`}
+                        >
+                            <LuBookOpen className="text-lg" />
+                            PDF
+                        </button>
+                    </div>
+                )}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                     className="rounded-2xl overflow-hidden shadow-2xl border border-[var(--border-color)]"
                 >
-                    <VideoPlayer
-                        videoUrl={story.videoUrl}
-                        thumbnail={story.thumbnail}
+                {isPdfOpen && selectedPdf ?
+                    (<PdfViewer pdfUrl={selectedPdf} /> ) :
+                    
+                       ( <VideoPlayer
+                            videoUrl={story.videoUrl}
+                            thumbnail={story.thumbnail}
                         title={story.title}
                         isComingSoon={story.isComingSoon}
-                    />
+                    />)}
                 </motion.div>
             </section>
-
+                    
             {/* Story Info */}
             <section className="max-w-6xl mx-auto px-4 mb-12">
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -206,26 +249,6 @@ export default function StoryDetailPage() {
                             )}
 
                             {/* Quick Stats */}
-                            {story.pdfUrl && (
-    <a
-        href={story.pdfUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="group flex w-full flex-col items-center justify-center rounded-2xl border border-saffron/30 bg-gradient-to-br from-saffron/10 to-gold/10 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-saffron hover:bg-saffron hover:shadow-lg hover:shadow-saffron/20"
-    >
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-saffron/15 text-saffron transition-all duration-300 group-hover:bg-white/20 group-hover:text-white">
-            <LuBookOpen className="block h-8 w-8 shrink-0" />
-        </div>
-
-        <span className="block w-full text-center font-heading text-xl text-[var(--text-primary)] transition-colors duration-300 group-hover:text-white">
-            Open Story PDF
-        </span>
-
-        <span className="mt-1 block w-full text-center text-xs text-[var(--text-muted)] transition-colors duration-300 group-hover:text-white/80">
-            Read the complete story notes
-        </span>
-    </a>
-)}
                             
                             {/*                         
                                 {story.pdfUrl && (

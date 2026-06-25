@@ -27,9 +27,7 @@ export default function AuthPage({ mode }) {
         setLoading(true);
 
         try {
-            const payload = isRegister
-                ? form
-                : { username: form.username, password: form.password };
+            const payload = isRegister ? form : { username: form.username, password: form.password };
             const data = isRegister ? await register(payload) : await login(payload);
             navigate(data.user.role === 'admin' ? '/admin/stories' : '/stories');
         } catch (err) {
@@ -55,12 +53,12 @@ export default function AuthPage({ mode }) {
                         {isRegister ? 'Begin Your Journey' : 'Welcome Back'}
                     </p>
                     <h1 className="font-heading text-3xl text-[var(--text-primary)]">
-                        {isRegister ? 'Create Account' : 'Login'}
+                        {isRegister ? 'Create Account' : ' Admin Login'}
                     </h1>
                     <p className="text-sm text-[var(--text-muted)] mt-2">
                         {isRegister
                             ? 'The first account becomes admin. Later accounts can read stories.'
-                            : 'Sign in to continue exploring Mystic India.'}
+                            : 'Sign in as the Admin.'}
                     </p>
                 </div>
 
@@ -130,7 +128,7 @@ export default function AuthPage({ mode }) {
                     </button>
                 </form>
 
-                <p className="text-center text-sm text-[var(--text-muted)] mt-6">
+                {/* <p className="text-center text-sm text-[var(--text-muted)] mt-6">
                     {isRegister ? 'Already have an account?' : 'New here?'}{' '}
                     <Link
                         to={isRegister ? '/login' : '/register'}
@@ -138,7 +136,7 @@ export default function AuthPage({ mode }) {
                     >
                         {isRegister ? 'Login' : 'Register'}
                     </Link>
-                </p>
+                </p> */}
             </motion.div>
         </div>
     );

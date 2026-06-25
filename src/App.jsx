@@ -43,6 +43,7 @@ function AnimatedRoutes() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/admin" element={<AdminStoriesPage />} />
           <Route path="/admin/stories" element={<AdminStoriesPage />} />
           <Route path="/admin/categories" element={<AdminCategoriesPage />} />
         </Routes>

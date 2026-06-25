@@ -11,6 +11,7 @@ const footerLinks = [
             { label: 'Devotion', path: '/stories?category=devotion' },
             { label: 'Wisdom', path: '/stories?category=wisdom' },
             { label: 'Sacrifice', path: '/stories?category=sacrifice' },
+            { label: 'Login as Admin', path: '/login' },
         ],
     },
     {
@@ -62,6 +63,7 @@ export default function Footer() {
                                         </Link>
                                     </li>
                                 ))}
+                                
                             </ul>
                         </div>
                     ))}
