@@ -21,8 +21,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend/dist/*"
-          target: "/home/ubuntu/mystic_india/frontend/dist"
+          source: "dist/*"
+          target: "/home/ubuntu/mystic_india/dist"
           strip_components: 2
 
       - name: Pull backend + restart on EC2
