@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "dist/*"
           target: "/home/ubuntu/mystic_india/dist"
-          strip_components: 2
+          strip_components: 1
 
       - name: Pull backend + restart on EC2
         uses: appleboy/ssh-action@v1.2.0
