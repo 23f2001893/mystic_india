@@ -12,7 +12,6 @@ jobs:
 
       - name: Build frontend on the runner
         run: |
-          cd frontend
           npm ci
           npm run build
 
