@@ -1,7 +1,14 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 function buildApiUrl(path) {
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    let normalizedPath = `/${path.replace(/^\/+/, '')}`;
+
+    if (API_BASE_URL === '/api' && normalizedPath === '/api') {
+        normalizedPath = '';
+    } else if (API_BASE_URL === '/api' && normalizedPath.startsWith('/api/')) {
+        normalizedPath = normalizedPath.slice(4);
+    }
+
     return `${API_BASE_URL}${normalizedPath}`;
 }
 
