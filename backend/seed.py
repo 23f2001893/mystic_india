@@ -2,7 +2,7 @@ from database import get_db
 from config import Session
 from models import *
 db=Session()
-import math
+
 categories = [
     {
         "slug": 'cosmic-myths',
