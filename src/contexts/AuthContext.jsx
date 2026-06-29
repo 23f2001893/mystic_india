@@ -6,11 +6,15 @@ const STORAGE_KEY = 'mystic-india-auth';
 
 export function AuthProvider({ children }) {
     const [auth, setAuth] = useState(null);
+    const [loading,setLoading]=useState(true);
 
     useEffect(() => {
         async function restoreSession(){
             const savedAuth = localStorage.getItem(STORAGE_KEY)
-            if(!savedAuth) return;
+            if(!savedAuth) {
+                setLoading(false)
+                return;
+            }
             try{
                 const parsedAuth =JSON.parse(savedAuth);
                 if(!parsedAuth.token){
@@ -26,6 +30,9 @@ export function AuthProvider({ children }) {
             catch(error){
                 localStorage.removeItem(STORAGE_KEY);
                 setAuth(null);
+            }
+            finally{
+                setLoading(false)
             }
         }
         restoreSession();
@@ -59,11 +66,12 @@ export function AuthProvider({ children }) {
             token: auth?.token || null,
             user: auth?.user || null,
             isAdmin: auth?.user?.role === 'admin',
+            loading,
             login,
             register,
             logout,
         }),
-        [auth]
+        [auth,loading]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

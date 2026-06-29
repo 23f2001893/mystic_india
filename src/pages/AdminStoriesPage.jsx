@@ -62,7 +62,7 @@ export default function AdminStoriesPage() {
             published,
         };
     }, [stories]);
-
+    if (loading) return null;
     if (!user) return <Navigate to="/" replace />;
     if (!isAdmin) return <Navigate to="/stories" replace />;
 

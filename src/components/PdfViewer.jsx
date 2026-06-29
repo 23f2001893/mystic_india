@@ -52,58 +52,59 @@ export default function PdfViewer({ pdfUrl }) {
     };
 
     return (
-        <div className="bg-neutral-100">
-            <div className="flex flex-col gap-3 border-b border-neutral-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm font-medium text-neutral-700">
-                    {numPages ? `Page ${pageNumber} of ${numPages}` : "Loading pages..."}
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        type="button"
-                        onClick={goToPreviousPage}
-                        disabled={!numPages || pageNumber <= 1}
-                        className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-saffron hover:text-saffron disabled:cursor-not-allowed disabled:opacity-40"
+        <div className="mx-auto w-full max-w-[860px] px-4 py-6">
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={goToPreviousPage}
+                    disabled={!numPages || pageNumber <= 1}
+                    className="absolute left-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-slate-800 shadow-lg transition hover:border-saffron hover:bg-saffron hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Previous page"
+                >
+                    ‹
+                </button>
+                <button
+                    type="button"
+                    onClick={goToNextPage}
+                    disabled={!numPages || pageNumber >= numPages}
+                    className="absolute right-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-slate-800 shadow-lg transition hover:border-saffron hover:bg-saffron hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Next page"
+                >
+                    ›
+                </button>
+
+                <div className="mx-auto w-full max-w-[840px] overflow-hidden rounded-[24px] bg-transparent">
+                    <Document
+                        file={pdfUrl}
+                        loading={<p className="py-10 text-center text-sm text-neutral-600">Loading PDF...</p>}
+                        error={<p className="py-10 text-center text-sm text-red-600">{loadError || "Unable to load PDF"}</p>}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
                     >
-                        Previous
-                    </button>
-                    <button
-                        type="button"
-                        onClick={goToNextPage}
-                        disabled={!numPages || pageNumber >= numPages}
-                        className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-saffron hover:text-saffron disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                        Next
-                    </button>
+                        {numPages && (
+                            <div className="flex justify-center overflow-hidden">
+                                <AnimatePresence mode="wait" custom={pageDirection}>
+                                    <motion.div
+                                        key={pageNumber}
+                                        custom={pageDirection}
+                                        variants={pageVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        transition={{ duration: 0.28, ease: "easeOut" }}
+                                        className="origin-center shadow-xl"
+                                    >
+                                        <Page pageNumber={pageNumber} width={820} />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        )}
+                    </Document>
                 </div>
             </div>
 
-            <div className="max-h-[72vh] overflow-y-auto p-4">
-            <Document
-                file={pdfUrl}
-                loading={<p className="py-10 text-center text-sm text-neutral-600">Loading PDF...</p>}
-                error={<p className="py-10 text-center text-sm text-red-600">{loadError || "Unable to load PDF"}</p>}
-                onLoadSuccess={onDocumentLoadSuccess}
-                onLoadError={onDocumentLoadError}
-            >
-                {numPages && (
-                    <div className="flex justify-center overflow-hidden [perspective:1200px]">
-                        <AnimatePresence mode="wait" custom={pageDirection}>
-                            <motion.div
-                                key={pageNumber}
-                                custom={pageDirection}
-                                variants={pageVariants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{ duration: 0.28, ease: "easeOut" }}
-                                className="origin-center shadow-xl"
-                            >
-                                <Page pageNumber={pageNumber} width={820} />
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-                )}
-            </Document>
+            <div className="mt-4 text-center text-sm text-neutral-700">
+                {numPages ? `Page ${pageNumber} of ${numPages}` : "Loading pages..."}
             </div>
         </div>
     );
