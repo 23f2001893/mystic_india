@@ -1,15 +1,14 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 function buildApiUrl(path) {
-    let normalizedPath = `/${path.replace(/^\/+/, '')}`;
+    const normalizedPath = `/${path.replace(/^\/+/, '')}`;
 
-    if (API_BASE_URL === '/api' && normalizedPath === '/api') {
-        normalizedPath = '';
-    } else if (API_BASE_URL === '/api' && normalizedPath.startsWith('/api/')) {
-        normalizedPath = normalizedPath.slice(4);
+    if (API_BASE_URL === '/api') {
+        const pathWithoutApiPrefix = normalizedPath.replace(/^\/api(?=\/|$)/, '');
+        return `/api${pathWithoutApiPrefix}`.replace(/\/\/{2,}/g, '/');
     }
 
-    return `${API_BASE_URL}${normalizedPath}`;
+    return `${API_BASE_URL}${normalizedPath}`.replace(/([^:])\/\/{2,}/g, '$1/');
 }
 
 async function request(path) {
