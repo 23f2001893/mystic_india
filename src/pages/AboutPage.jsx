@@ -44,7 +44,7 @@ export default function AboutPage() {
                         </motion.div>
 
                         <p className="text-saffron text-sm tracking-[0.3em] uppercase mb-3 font-medium">
-                            Our Sacred Mission
+                            Our Sacred Mission:
                         </p>
                         <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[var(--text-primary)] mb-6">
                             Preserving India's
