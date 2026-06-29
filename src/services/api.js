@@ -1,7 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+
+function buildApiUrl(path) {
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${API_BASE_URL}${normalizedPath}`;
+}
 
 async function request(path) {
-    const response = await fetch(`${API_BASE_URL}${path}`);
+    const response = await fetch(buildApiUrl(path));
 
     if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
@@ -13,7 +18,7 @@ export async function uploadAdminFile(file, fileType, token) {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/upload?file_type=${fileType}`, {
+    const response = await fetch(buildApiUrl(`/admin/upload?file_type=${fileType}`), {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
@@ -26,7 +31,7 @@ export async function uploadAdminFile(file, fileType, token) {
 }
 
 async function requestWithBody(path, { method = 'POST', body, token } = {}) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(buildApiUrl(path), {
         method,
         headers: {
             'Content-Type': 'application/json',
@@ -45,7 +50,7 @@ async function requestWithBody(path, { method = 'POST', body, token } = {}) {
 }
 
 export function fetchCategories() {
-    return request('/api/categories');
+    return request('/categories');
 }
 
 export function fetchStories({ category = 'all', sort = 'popular' } = {}) {
@@ -53,35 +58,35 @@ export function fetchStories({ category = 'all', sort = 'popular' } = {}) {
     if (category && category !== 'all') {
         params.set('category', category);
     }
-    return request(`/api/stories?${params.toString()}`);
+    return request(`/stories?${params.toString()}`);
 }
 
 export function fetchStoryBySlug(slug) {
-    return request(`/api/stories/${encodeURIComponent(slug)}`);
+    return request(`/stories/${encodeURIComponent(slug)}`);
 }
 
 export function fetchRelatedStories(storyId, limit = 3) {
-    return request(`/api/stories/${storyId}/related?limit=${limit}`);
+    return request(`/stories/${storyId}/related?limit=${limit}`);
 }
 
 export function searchStoriesApi(query) {
-    return request(`/api/search/stories?q=${encodeURIComponent(query)}`);
+    return request(`/search/stories?q=${encodeURIComponent(query)}`);
 }
 
 export function registerUser(payload) {
-    return requestWithBody('/api/auth/register', { body: payload });
+    return requestWithBody('/auth/register', { body: payload });
 }
 
 export function loginUser(payload) {
-    return requestWithBody('/api/auth/login', { body: payload });
+    return requestWithBody('/auth/login', { body: payload });
 }
 
 export function createStory(payload, token) {
-    return requestWithBody('/api/admin/stories', { body: payload, token });
+    return requestWithBody('/admin/stories', { body: payload, token });
 }
 
 export function updateStory(storyId, payload, token) {
-    return requestWithBody(`/api/admin/stories/${storyId}`, {
+    return requestWithBody(`/admin/stories/${storyId}`, {
         method: 'PUT',
         body: payload,
         token,
@@ -89,7 +94,7 @@ export function updateStory(storyId, payload, token) {
 }
 
 export function deleteStory(storyId, token) {
-    return requestWithBody(`/api/admin/stories/${storyId}`, {
+    return requestWithBody(`/admin/stories/${storyId}`, {
         method: 'DELETE',
         token,
     });
@@ -100,11 +105,11 @@ export function publishStory(storyId, token) {
 }
 
 export function createCategory(payload, token) {
-    return requestWithBody('/api/admin/categories', { body: payload, token });
+    return requestWithBody('/admin/categories', { body: payload, token });
 }
 
 export function updateCategory(categoryId, payload, token) {
-    return requestWithBody(`/api/admin/categories/${categoryId}`, {
+    return requestWithBody(`/admin/categories/${categoryId}`, {
         method: 'PUT',
         body: payload,
         token,
@@ -112,13 +117,13 @@ export function updateCategory(categoryId, payload, token) {
 }
 
 export function deleteCategory(categoryId, token) {
-    return requestWithBody(`/api/admin/categories/${categoryId}`, {
+    return requestWithBody(`/admin/categories/${categoryId}`, {
         method: 'DELETE',
         token,
     });
 }
 export function fetchCurrentUser(token){
-    return requestWithBody('/api/auth/me',{
+    return requestWithBody('/auth/me',{
         method:"GET",
         token
     })
