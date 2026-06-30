@@ -12,7 +12,7 @@ export default function PdfViewer({ pdfUrl }) {
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDirection, setPageDirection] = useState(1);
     const [loadError, setLoadError] = useState("");
-
+    const [isPageLoading,setIsPageLoading]=useState(false)
     function onDocumentLoadSuccess({ numPages }) {
         setNumPages(numPages);
         setPageNumber(1);
@@ -76,6 +76,7 @@ export default function PdfViewer({ pdfUrl }) {
                 <div className="mx-auto w-full max-w-[840px] overflow-hidden rounded-[24px] bg-transparent">
                     <Document
                         file={pdfUrl}
+                        options={PDF_OPTIONS}
                         loading={<p className="py-10 text-center text-sm text-neutral-600">Loading PDF...</p>}
                         error={<p className="py-10 text-center text-sm text-red-600">{loadError || "Unable to load PDF"}</p>}
                         onLoadSuccess={onDocumentLoadSuccess}
@@ -97,6 +98,10 @@ export default function PdfViewer({ pdfUrl }) {
                                         <Page pageNumber={pageNumber} width={820} />
                                     </motion.div>
                                 </AnimatePresence>
+                                {pageNumber < numPages && (
+                                    <div className="hidden">
+                                        <Page pageNumber={pageNumber + 1} width={820} />
+                                    </div>)}
                             </div>
                         )}
                     </Document>
