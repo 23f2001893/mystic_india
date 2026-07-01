@@ -46,6 +46,7 @@ export default function AdminStoriesPage() {
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
     const [uploadingField, setUploadingField] = useState('');
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const categoryOptions = useMemo(() => categories.map((category) => category.id), [categories]);
@@ -168,11 +169,12 @@ export default function AdminStoriesPage() {
         if (!file) return;
 
         setUploadingField(fieldName);
+        setUploadProgress(0);
         setFormError('');
         setMessage('');
 
         try {
-            const result = await uploadAdminFile(file, fileType, token);
+            const result = await uploadAdminFile(file, fileType, token, setUploadProgress);
             setForm((current) => ({
                 ...current,
                 [fieldName]: result.url,
@@ -183,6 +185,7 @@ export default function AdminStoriesPage() {
             setFormError(err.message || 'Unable to upload file');
         } finally {
             setUploadingField('');
+            setUploadProgress(0);
             event.target.value = '';
         }
     };
@@ -287,6 +290,7 @@ export default function AdminStoriesPage() {
                                     value={form.thumbnail}
                                     icon={FiImage}
                                     uploading={uploadingField === 'thumbnail'}
+                                    progress={uploadingField === 'thumbnail' ? uploadProgress : 0}
                                     onChange={(event) => handleFileUpload(event, 'thumbnail', 'thumbnail')}
                                 />
                                 <UploadField
@@ -297,6 +301,7 @@ export default function AdminStoriesPage() {
                                     value={form.videoUrl}
                                     icon={FiVideo}
                                     uploading={uploadingField === 'videoUrl'}
+                                    progress={uploadingField === 'videoUrl' ? uploadProgress : 0}
                                     onChange={(event) => handleFileUpload(event, 'video', 'videoUrl')}
                                 />
                                 <UploadField
@@ -307,6 +312,7 @@ export default function AdminStoriesPage() {
                                     value={form.pdfUrl}
                                     icon={FiFileText}
                                     uploading={uploadingField === 'pdfUrl'}
+                                    progress={uploadingField === 'pdfUrl' ? uploadProgress : 0}
                                     onChange={(event) => handleFileUpload(event, 'pdf', 'pdfUrl')}
                                 />
                             </div>
@@ -440,19 +446,35 @@ export default function AdminStoriesPage() {
     );
 }
 
-function UploadField({ id, label, helper, accept, value, icon: Icon, uploading, onChange }) {
+function UploadField({ id, label, helper, accept, value, icon: Icon, uploading, progress, onChange }) {
     return (
         <label
             htmlFor={id}
             className="group flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-4 text-center transition-all hover:border-saffron hover:bg-saffron/5"
         >
-            <input id={id} type="file" accept={accept} onChange={onChange} className="sr-only" />
-            <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-saffron/10 text-saffron transition-all group-hover:bg-saffron group-hover:text-white">
-                {uploading ? <FiUploadCloud className="animate-pulse text-xl" /> : <Icon className="text-xl" />}
+            <input id={id} type="file" accept={accept} onChange={onChange} className="sr-only" disabled={uploading} />
+            <span className="mb-3 inline-flex h-11 w-11 items-center justify-center text-saffron">
+                {uploading ? (
+                    <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" strokeWidth="2.5" opacity="0.2" />
+                        <circle
+                            cx="18" cy="18" r="15.9" fill="none"
+                            stroke="currentColor" strokeWidth="2.5"
+                            strokeDasharray={`${progress} ${100 - progress}`}
+                            strokeDashoffset="0"
+                            strokeLinecap="round"
+                            className="transition-all duration-200"
+                        />
+                    </svg>
+                ) : (
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-saffron/10 transition-all group-hover:bg-saffron group-hover:text-white">
+                        <Icon className="text-xl" />
+                    </span>
+                )}
             </span>
             <span className="text-sm font-semibold text-[var(--text-primary)]">{label}</span>
             <span className="mt-1 text-xs text-[var(--text-muted)]">
-                {uploading ? 'Uploading...' : value ? 'Uploaded' : helper}
+                {uploading ? `${progress}%` : value ? 'Uploaded' : helper}
             </span>
             {value && !uploading && (
                 <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600">

@@ -30,7 +30,7 @@ from schemas import (
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-TOKEN_TTL_SECONDS = 10*60
+TOKEN_TTL_SECONDS = 60*60
 
 JWT_ALGORITHM = "HS256"
 
