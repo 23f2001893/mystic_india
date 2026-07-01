@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 function handle401(status) {
     if (status === 401) window.dispatchEvent(new Event('auth:logout'));
