@@ -196,7 +196,8 @@ export default function HomePage() {
                         )}
                         {categories.map((cat, i) => {
                             const Icon = categoryIcons[cat.id] || GiScrollUnfurled;
-                            const count = cat.storyCount ?? stories.filter((s) => s.category === cat.id).length;
+                            const publishedCount = cat.publishedStoryCount ?? 0;
+                            const hasPublishedStories = publishedCount > 0;
                             return (
                                 <ScrollReveal key={cat.id} delay={i * 0.15}>
                                     <Link
@@ -223,9 +224,15 @@ export default function HomePage() {
                                                 <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6 flex-grow">
                                                     {cat.description}
                                                 </p>
-                                                <span className="text-xs text-saffron font-medium tracking-wide uppercase mt-auto">
-                                                    {count} Stories →
-                                                </span>
+                                                {hasPublishedStories ? (
+                                                    <span className="text-xs text-saffron font-medium tracking-wide uppercase mt-auto">
+                                                        {publishedCount} Published {publishedCount === 1 ? 'Story' : 'Stories'} →
+                                                    </span>
+                                                ) : (
+                                                    <span className="mt-auto inline-flex items-center rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-saffron">
+                                                        Coming Soon
+                                                    </span>
+                                                )}
                                             </div>
                                         </motion.div>
                                     </Link>

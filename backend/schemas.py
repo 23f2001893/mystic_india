@@ -13,6 +13,8 @@ class CategoryOut(BaseModel):
     color: str | None = None
     gradient: str | None = None
     storyCount: int = 0
+    publishedStoryCount: int = 0
+    comingSoonStoryCount: int = 0
 
 
 class CategoryCreate(BaseModel):

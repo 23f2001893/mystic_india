@@ -8,7 +8,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import Depends, Header, HTTPException, Query, status, UploadFile, File
 import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
-from sqlalchemy import func, or_
+from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session as DbSession, joinedload
 from s3_utils import upload_file_to_s3
 
@@ -49,8 +49,26 @@ CATEGORY_META = {
 }
 
 
-def serialize_category(category: Categories) -> CategoryOut:
+def serialize_category(
+    category: Categories,
+    story_count: int | None = None,
+    published_story_count: int | None = None,
+    coming_soon_story_count: int | None = None,
+) -> CategoryOut:
     meta = CATEGORY_META.get(category.slug, {})
+    stories = category.stories or []
+    resolved_story_count = story_count if story_count is not None else len(stories)
+    resolved_published_count = (
+        published_story_count
+        if published_story_count is not None
+        else len([story for story in stories if not story.isComingSoon])
+    )
+    resolved_coming_soon_count = (
+        coming_soon_story_count
+        if coming_soon_story_count is not None
+        else len([story for story in stories if story.isComingSoon])
+    )
+
     return CategoryOut(
         id=category.slug,
         dbId=category.id,
@@ -60,7 +78,9 @@ def serialize_category(category: Categories) -> CategoryOut:
         icon=category.icon,
         color=meta.get("color"),
         gradient=meta.get("gradient"),
-        storyCount=len(category.stories or []),
+        storyCount=resolved_story_count,
+        publishedStoryCount=resolved_published_count,
+        comingSoonStoryCount=resolved_coming_soon_count,
     )
 
 
@@ -246,14 +266,32 @@ def get_me(user: User = Depends(get_current_user)):
 
 @app.get("/api/categories", response_model=list[CategoryOut])
 def get_categories(db: DbSession = Depends(get_db)):
-    categories = (
+    published_condition = or_(Stories.isComingSoon.is_(False), Stories.isComingSoon.is_(None))
+    category_rows = (
         db.query(Categories)
-        .options(joinedload(Categories.stories))
-        .order_by(Categories.id)
+        .outerjoin(Stories, Stories.category_id == Categories.id)
+        .add_columns(
+            func.count(Stories.id).label("story_count"),
+            func.sum(case((published_condition, 1), else_=0)).label("published_story_count"),
+            func.sum(case((Stories.isComingSoon.is_(True), 1), else_=0)).label("coming_soon_story_count"),
+        )
+        .group_by(Categories.id)
+        .order_by(
+            func.sum(case((published_condition, 1), else_=0)).desc(),
+            Categories.id,
+        )
         .all()
     )
-    return [serialize_category(category) for category in categories]
 
+    return [
+        serialize_category(
+            category,
+            story_count=story_count or 0,
+            published_story_count=published_story_count or 0,
+            coming_soon_story_count=coming_soon_story_count or 0,
+        )
+        for category, story_count, published_story_count, coming_soon_story_count in category_rows
+    ]
 
 @app.post("/api/admin/categories", response_model=CategoryOut, status_code=status.HTTP_201_CREATED)
 def create_category(

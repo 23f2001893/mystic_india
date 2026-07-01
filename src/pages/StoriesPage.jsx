@@ -23,6 +23,7 @@ export default function StoriesPage() {
         category: activeCategory,
         sort: 'popular',
     });
+    const totalStoryCount = categories.reduce((sum, category) => sum + (category.storyCount ?? 0), 0);
 
     const setCategory = (cat) => {
         const nextParams = new URLSearchParams(searchParams);
@@ -94,11 +95,12 @@ export default function StoriesPage() {
                                     : 'border-transparent text-[var(--text-secondary)] hover:border-saffron/40 hover:bg-saffron/5 hover:text-saffron'}`}
                             >
                                 <span className="font-medium">All Series</span>
-                                <span className="block text-xs opacity-75">{stories.length} stories</span>
+                                <span className="block text-xs opacity-75">{totalStoryCount} stories</span>
                             </button>
 
                             {categories.map((cat) => {
-                                const count = stories.filter((story) => story.category === cat.id).length;
+                                const publishedCount = cat.publishedStoryCount ?? 0;
+                                const hasPublishedStories = publishedCount > 0;
                                 return (
                                     <button
                                         key={cat.id}
@@ -110,7 +112,11 @@ export default function StoriesPage() {
                                         <span className="flex items-start gap-3">
                                             <span>
                                                 <span className="block font-medium leading-snug">{cat.name}</span>
-                                                <span className="block text-xs opacity-75">{count} stories</span>
+                                                <span className="block text-xs opacity-75">
+                                                    {hasPublishedStories
+                                                        ? `${publishedCount} published ${publishedCount === 1 ? 'story' : 'stories'}`
+                                                        : 'Coming soon'}
+                                                </span>
                                             </span>
                                         </span>
                                     </button>

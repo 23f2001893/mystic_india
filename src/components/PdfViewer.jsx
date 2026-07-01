@@ -4,12 +4,15 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+).toString();
 
 const PDF_OPTIONS = {
-    rangeChunkSize: 65536,
+    rangeChunkSize: 131072,
     disableStream: false,
-    disableAutoFetch: false,
+    disableAutoFetch: true,
 };
 
 export default function PdfViewer({ pdfUrl }) {
