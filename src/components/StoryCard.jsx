@@ -89,9 +89,9 @@ export default function StoryCard({ story, isBookmarked, onToggleBookmark, index
                 {/* Decorative bottom border */}
                 <div className={`pt-4 border-t border-[var(--border-color)] flex items-center justify-between gap-4 mt-auto`}>
                     <div className="flex min-w-0 items-center gap-4">
-                        <span className="text-xs text-[var(--text-muted)]">
+                        {/* <span className="text-xs text-[var(--text-muted)]">
                             ⭐ {story.popularity}% popularity
-                        </span>
+                        </span> */}
                         {isList && story.moral && (
                             <span className="hidden lg:inline text-xs italic text-[var(--text-muted)] border-l border-[var(--border-color)] pl-4">
                                 "{story.moral}"
