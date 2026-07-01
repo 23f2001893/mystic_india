@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import StoriesLayout from './layouts/StoriesLayout';
 import HomePage from './pages/HomePage';
 import StoriesPage from './pages/StoriesPage';
 import StoryDetailPage from './pages/StoryDetailPage';
@@ -14,23 +15,27 @@ import AdminCategoriesPage from './pages/AdminCategoriesPage';
 import { useEffect } from 'react';
 
 function ScrollToTop() {
-
   const { pathname } = useLocation();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  
   return null;
 }
 
 function AnimatedRoutes() {
   const location = useLocation();
 
+  // Group /stories and /story/* under one key so the sidebar doesn't
+  // re-animate when navigating between stories and story detail.
+  const isStoriesArea =
+    location.pathname === '/stories' ||
+    location.pathname.startsWith('/story/');
+  const animationKey = isStoriesArea ? 'stories-area' : location.pathname;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={location.pathname}
+        key={animationKey}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -38,8 +43,10 @@ function AnimatedRoutes() {
       >
         <Routes location={location}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/stories" element={<StoriesPage />} />
-          <Route path="/story/:slug" element={<StoryDetailPage />} />
+          <Route element={<StoriesLayout />}>
+            <Route path="/stories" element={<StoriesPage />} />
+            <Route path="/story/:slug" element={<StoryDetailPage />} />
+          </Route>
           <Route path="/about" element={<AboutPage />} />
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />

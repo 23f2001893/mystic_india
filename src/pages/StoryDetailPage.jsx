@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiBookmark } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
@@ -11,24 +10,14 @@ import ScrollReveal from '../components/ScrollReveal';
 import DecorativeBorder from '../components/DecorativeBorder';
 import { useStoryDetail } from '../hooks/useStoriesData';
 import { useBookmarks } from '../hooks/useBookmarks';
-import { LuBookOpen } from "react-icons/lu";
 import PdfViewer from '../components/PdfViewer';
 
 export default function StoryDetailPage() {
     const { slug } = useParams();
+    const [searchParams] = useSearchParams();
     const { story, relatedStories, loading } = useStoryDetail(slug);
     const { isBookmarked, toggleBookmark } = useBookmarks();
-    const [selectedPdf, setSelectedPdf] = useState(null);
-    const [isPdfOpen, setIsPdfOpen] = useState(false);
-
-    const openPdf = () => {
-        setSelectedPdf(story.pdfUrl);
-        setIsPdfOpen(true);
-    };
-
-    const openVideo = () => {
-        setIsPdfOpen(false);
-    };
+    const activeView = searchParams.get('view') || 'video';
 
     if (loading) {
         return (
@@ -72,50 +61,23 @@ export default function StoryDetailPage() {
                 </Link>
             </div>
 
-            {/* Video Player */}
+            {/* Video / PDF viewer */}
             <section className="max-w-6xl mx-auto px-4 mb-8">
-                {story.pdfUrl && (
-                    <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-                        <button
-                            type="button"
-                            onClick={openVideo}
-                            className={`inline-flex flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
-                                !isPdfOpen
-                                    ? 'border-saffron bg-saffron text-white shadow-lg shadow-saffron/20'
-                                    : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-saffron hover:text-saffron'
-                            }`}
-                        >
-                            Video
-                        </button>
-                        <button
-                            type="button"
-                            onClick={openPdf}
-                            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
-                                isPdfOpen
-                                    ? 'border-saffron bg-saffron text-white shadow-lg shadow-saffron/20'
-                                    : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-saffron hover:text-saffron'
-                            }`}
-                        >
-                            <LuBookOpen className="text-lg" />
-                            PDF
-                        </button>
-                    </div>
-                )}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                     className="rounded-2xl overflow-hidden shadow-2xl border border-[var(--border-color)]"
                 >
-                {isPdfOpen && selectedPdf ?
-                    (<PdfViewer pdfUrl={selectedPdf} pageCount={story.pdfpagecount} /> ) :
-                    
-                       ( <VideoPlayer
+                    {activeView === 'pdf' && story.pdfUrl
+                        ? <PdfViewer pdfUrl={story.pdfUrl} pageCount={story.pdfpagecount} />
+                        : <VideoPlayer
                             videoUrl={story.videoUrl}
                             thumbnail={story.thumbnail}
-                        title={story.title}
-                        isComingSoon={story.isComingSoon}
-                    />)}
+                            title={story.title}
+                            isComingSoon={story.isComingSoon}
+                          />
+                    }
                 </motion.div>
             </section>
                     

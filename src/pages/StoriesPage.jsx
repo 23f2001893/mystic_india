@@ -81,50 +81,7 @@ export default function StoriesPage() {
             </section>
 
             <section className="px-4 pb-20">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-                    <aside className={`lg:sticky lg:top-28 h-fit rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 ${activeCategory === 'all' ? 'lg:mt-[154px]' : 'lg:mt-[72px]'}`}>
-                        <div className="mb-4 border-b border-[var(--border-color)] pb-3">
-                            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Series</p>
-                        </div>
-
-                        <div className="space-y-1">
-                            <button
-                                onClick={() => setCategory('all')}
-                                className={`w-full border-l-2 px-3 py-2.5 text-left text-sm transition-all ${activeCategory === 'all'
-                                    ? 'border-saffron bg-saffron/10 text-saffron'
-                                    : 'border-transparent text-[var(--text-secondary)] hover:border-saffron/40 hover:bg-saffron/5 hover:text-saffron'}`}
-                            >
-                                <span className="font-medium">All Series</span>
-                                <span className="block text-xs opacity-75">{totalStoryCount} stories</span>
-                            </button>
-
-                            {categories.map((cat) => {
-                                const publishedCount = cat.publishedStoryCount ?? 0;
-                                const hasPublishedStories = publishedCount > 0;
-                                return (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => setCategory(cat.id)}
-                                        className={`w-full border-l-2 px-3 py-2.5 text-left text-sm transition-all ${activeCategory === cat.id
-                                            ? 'border-saffron bg-saffron/10 text-saffron'
-                                            : 'border-transparent text-[var(--text-secondary)] hover:border-saffron/40 hover:bg-saffron/5 hover:text-saffron'}`}
-                                    >
-                                        <span className="flex items-start gap-3">
-                                            <span>
-                                                <span className="block font-medium leading-snug">{cat.name}</span>
-                                                <span className="block text-xs opacity-75">
-                                                    {hasPublishedStories
-                                                        ? `${publishedCount} published ${publishedCount === 1 ? 'story' : 'stories'}`
-                                                        : 'Coming soon'}
-                                                </span>
-                                            </span>
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </aside>
-
+                <div className="max-w-7xl mx-auto">
                     <div>
                     <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
                         <div>
@@ -276,3 +233,4 @@ export default function StoriesPage() {
         </div>
     );
 }
+
