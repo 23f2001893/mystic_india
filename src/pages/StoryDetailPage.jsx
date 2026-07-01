@@ -108,7 +108,7 @@ export default function StoryDetailPage() {
                     className="rounded-2xl overflow-hidden shadow-2xl border border-[var(--border-color)]"
                 >
                 {isPdfOpen && selectedPdf ?
-                    (<PdfViewer pdfUrl={selectedPdf} /> ) :
+                    (<PdfViewer pdfUrl={selectedPdf} pageCount={story.pdfpagecount} /> ) :
                     
                        ( <VideoPlayer
                             videoUrl={story.videoUrl}

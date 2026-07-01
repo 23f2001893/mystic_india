@@ -22,6 +22,7 @@ const emptyForm = {
     thumbnail: '',
     videoUrl: '',
     pdfUrl: '',
+    pdfpagecount: 0,
     moral: '',
     duration: '',
     popularity: 0,
@@ -96,6 +97,7 @@ export default function AdminStoriesPage() {
             thumbnail: story.thumbnail || '',
             videoUrl: story.videoUrl || '',
             pdfUrl: story.pdfUrl || '',
+            pdfpagecount: story.pdfpagecount || 0,
             moral: story.moral || '',
             duration: story.duration || '',
             popularity: story.popularity || 0,
@@ -171,7 +173,11 @@ export default function AdminStoriesPage() {
 
         try {
             const result = await uploadAdminFile(file, fileType, token);
-            setForm((current) => ({ ...current, [fieldName]: result.url }));
+            setForm((current) => ({
+                ...current,
+                [fieldName]: result.url,
+                ...(fileType === 'pdf' && result.pageCount ? { pdfpagecount: result.pageCount } : {}),
+            }));
             setMessage(`${file.name} uploaded successfully.`);
         } catch (err) {
             setFormError(err.message || 'Unable to upload file');

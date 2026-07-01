@@ -35,6 +35,7 @@ class Stories(Base):
     thumbnail = Column(String)
     videoUrl = Column(String)
     pdfUrl = Column(String)
+    pdfpagecount = Column(Integer)
     moral = Column(Text)
     duration = Column(String)
     popularity = Column(Integer)

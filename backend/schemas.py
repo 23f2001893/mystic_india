@@ -44,6 +44,7 @@ class StoryOut(BaseModel):
     thumbnail: str | None = None
     videoUrl: str | None = None
     pdfUrl: str | None = None
+    pdfpagecount: int | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = 0
@@ -60,6 +61,7 @@ class StoryCreate(BaseModel):
     thumbnail: str | None = None
     videoUrl: str | None = None
     pdfUrl: str | None = None
+    pdfpagecount: int | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = 0
@@ -76,6 +78,7 @@ class StoryUpdate(BaseModel):
     thumbnail: str | None = None
     videoUrl: str | None = None
     pdfUrl: str | None = None
+    pdfpagecount: int | None = None
     moral: str | None = None
     duration: str | None = None
     popularity: int | None = None

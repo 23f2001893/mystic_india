@@ -10,7 +10,7 @@ import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session as DbSession, joinedload
-from s3_utils import upload_file_to_s3
+from s3_utils import upload_file_to_s3, convert_pdf_to_images_and_upload
 
 from app import app
 from database import get_db
@@ -96,6 +96,7 @@ def serialize_story(story: Stories) -> StoryOut:
         thumbnail=story.thumbnail,
         videoUrl=story.videoUrl,
         pdfUrl=story.pdfUrl,
+        pdfpagecount=story.pdfpagecount,
         moral=story.moral,
         duration=story.duration,
         popularity=story.popularity,
@@ -228,10 +229,18 @@ def upload_file(
     file_type: str = "misc",
     _: User = Depends(require_admin),
 ):
+    if file_type == "pdf":
+        try:
+            base_url, page_count = convert_pdf_to_images_and_upload(file)
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        except (BotoCoreError, ClientError) as exc:
+            raise HTTPException(status_code=502, detail=f"S3 upload failed: {exc}") from exc
+        return {"url": base_url, "fileType": "pdf", "pageCount": page_count}
+
     allowed_folders = {
         "thumbnail": "thumbnails",
         "video": "videos",
-        "pdf": "pdfs",
     }
     folder_name = allowed_folders.get(file_type)
     if not folder_name:
@@ -244,10 +253,7 @@ def upload_file(
     except (BotoCoreError, ClientError) as exc:
         raise HTTPException(status_code=502, detail=f"S3 upload failed: {exc}") from exc
 
-    return {
-        "url": file_url,
-        "fileType": file_type,
-    }
+    return {"url": file_url, "fileType": file_type}
 
 
 @app.post("/api/auth/login", response_model=AuthOut)
