@@ -71,8 +71,8 @@ export default function Footer() {
 
                 {/* Bottom */}
                 <div className="mt-12 pt-8 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-xs text-[var(--text-muted)]">
-                        © 2025 Mystic India. All rights reserved.
+                    <p className="text-md text-[var(--text-muted)]">
+                        © 2026 Avanti Foundation. All rights reserved.Built in Odisha by <a href="https://avetilearning.com/#/aboutus/labs" className="text-saffron hover:underline" target="_blank" rel="noopener noreferrer">Aveti Learning</a>
                     </p>
                     <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
                         Made with <FiHeart className="text-saffron" /> for Indian Heritage
